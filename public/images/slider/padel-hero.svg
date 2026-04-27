@@ -1,0 +1,26 @@
+<svg width="1600" height="960" viewBox="0 0 1600 960" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="960" fill="#020617"/>
+  <rect width="1600" height="960" fill="url(#bg)"/>
+  <ellipse cx="1260" cy="120" rx="360" ry="220" fill="#22D3EE" fill-opacity="0.18"/>
+  <ellipse cx="260" cy="860" rx="440" ry="220" fill="#2563EB" fill-opacity="0.18"/>
+  <path d="M240 760L810 470L1360 760L810 920L240 760Z" fill="#134E4A" fill-opacity="0.18" stroke="#67E8F9" stroke-opacity="0.24"/>
+  <path d="M360 725L810 505L1245 725L810 855L360 725Z" fill="#1E3A8A" fill-opacity="0.18" stroke="#E2E8F0" stroke-opacity="0.22"/>
+  <path d="M810 505V855" stroke="#E2E8F0" stroke-opacity="0.18" stroke-width="4"/>
+  <path d="M585 615L1030 615" stroke="#E2E8F0" stroke-opacity="0.16" stroke-width="4"/>
+  <path d="M535 700L1080 700" stroke="#E2E8F0" stroke-opacity="0.12" stroke-width="4"/>
+  <rect x="540" y="350" width="540" height="310" rx="28" stroke="#E2E8F0" stroke-opacity="0.18" stroke-width="12"/>
+  <path d="M620 670L620 280M980 670L980 280" stroke="#E2E8F0" stroke-opacity="0.14" stroke-width="10"/>
+  <path d="M470 640L1130 640" stroke="#E2E8F0" stroke-opacity="0.12" stroke-width="8"/>
+  <rect x="180" y="130" width="340" height="86" rx="24" fill="#020617" fill-opacity="0.62" stroke="#E2E8F0" stroke-opacity="0.12"/>
+  <text x="214" y="183" fill="#F8FAFC" font-size="42" font-family="Arial, Helvetica, sans-serif" font-weight="700">Padel</text>
+  <circle cx="1228" cy="686" r="22" fill="#EAB308"/>
+  <rect x="1118" y="566" width="46" height="176" rx="20" transform="rotate(18 1118 566)" fill="#F8FAFC"/>
+  <circle cx="1141" cy="610" r="36" fill="#BEE3F8" stroke="#F8FAFC" stroke-width="8"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08111D"/>
+      <stop offset="0.52" stop-color="#13233C"/>
+      <stop offset="1" stop-color="#08111D"/>
+    </linearGradient>
+  </defs>
+</svg>

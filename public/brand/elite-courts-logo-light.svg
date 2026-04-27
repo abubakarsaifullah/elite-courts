@@ -1,0 +1,17 @@
+<svg width="720" height="180" viewBox="0 0 720 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="48" y1="24" x2="168" y2="156" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06B6D4"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect x="18" y="18" width="144" height="144" rx="36" fill="#E0F2FE"/>
+  <rect x="18" y="18" width="144" height="144" rx="36" stroke="url(#g1)" stroke-width="3"/>
+  <path d="M55 120C74 72 112 50 144 56" stroke="url(#g1)" stroke-width="10" stroke-linecap="round"/>
+  <path d="M52 66H128" stroke="#06B6D4" stroke-opacity="0.8" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="129" cy="66" r="8" fill="#06B6D4"/>
+  <path d="M72 129L105 96L138 129" stroke="#1E293B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="202" y="83" fill="#0F172A" font-size="56" font-weight="700" font-family="Arial, Helvetica, sans-serif" letter-spacing="6">ELITE</text>
+  <text x="202" y="136" fill="#0F172A" font-size="56" font-weight="700" font-family="Arial, Helvetica, sans-serif" letter-spacing="6">COURTS</text>
+  <text x="205" y="161" fill="#0891B2" font-size="18" font-weight="700" font-family="Arial, Helvetica, sans-serif" letter-spacing="7">PADEL · PICKLEBALL · CRICKET</text>
+</svg>

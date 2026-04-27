@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --bg-alt: rgba(15, 23, 42, 0.04);
+  --surface: rgba(255, 255, 255, 0.76);
+  --surface-strong: rgba(255, 255, 255, 0.94);
+  --surface-soft: rgba(255, 255, 255, 0.58);
+  --text: #0f172a;
+  --muted: #475569;
+  --muted-strong: #334155;
+  --border: rgba(15, 23, 42, 0.12);
+  --border-strong: rgba(15, 23, 42, 0.18);
+  --accent: #06b6d4;
+  --accent-strong: #0e7490;
+  --accent-soft: rgba(6, 182, 212, 0.14);
+  --header-bg: rgba(248, 250, 252, 0.78);
+  --accent-foreground: #082f49;
+  --shadow: 0 24px 70px -34px rgba(15, 23, 42, 0.22);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #020617;
+  --bg-alt: rgba(255, 255, 255, 0.03);
+  --surface: rgba(15, 23, 42, 0.76);
+  --surface-strong: rgba(15, 23, 42, 0.92);
+  --surface-soft: rgba(15, 23, 42, 0.56);
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --muted-strong: #cbd5e1;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --accent: #22d3ee;
+  --accent-strong: #67e8f9;
+  --accent-soft: rgba(34, 211, 238, 0.12);
+  --header-bg: rgba(2, 6, 23, 0.76);
+  --accent-foreground: #082f49;
+  --shadow: 0 24px 70px -34px rgba(2, 6, 23, 0.7);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(6, 182, 212, 0.12), transparent 28%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
+  color: var(--text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.32);
+  color: white;
+}
+
+img {
+  user-select: none;
+}
+
+.logo-dark {
+  display: none;
+}
+
+.logo-light {
+  display: block;
+}
+
+:root[data-theme="dark"] .logo-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .logo-dark {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
