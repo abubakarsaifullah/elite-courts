@@ -18,7 +18,7 @@ export function buildMetadata({ title, description, path = "/" }: MetadataInput)
       canonical,
     },
     applicationName: siteConfig.name,
-    keywords: siteContent.seo.keywords,
+    keywords: [...siteContent.seo.keywords],
     openGraph: {
       type: "website",
       url: canonical,
