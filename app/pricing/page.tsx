@@ -57,7 +57,11 @@ export default function PricingPage() {
                   <PricingPackageCard key={item.id} item={item} />
                 ))}
               </div>
-              {section.note ? <p className="text-sm text-[color:var(--accent-strong)]">{section.note}</p> : null}
+              {"note" in section && section.note && (
+                <p className="text-sm text-[color:var(--accent-strong)]">
+                  {section.note}
+                </p>
+              )}
             </Container>
           </section>
         );
