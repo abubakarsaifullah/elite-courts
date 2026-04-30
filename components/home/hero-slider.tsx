@@ -44,7 +44,7 @@ export function HeroSlider() {
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      <div className="relative h-[74svh] min-h-[540px] max-h-[820px]">
+      <div className="relative h-[78svh] min-h-[500px] max-h-[760px] sm:h-[82svh] sm:min-h-[620px] sm:max-h-[920px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={active.src}
@@ -61,30 +61,31 @@ export function HeroSlider() {
               sizes="100vw"
               unoptimized={remote}
               className="object-cover"
-              preload={index === 0}
-              loading={index === 0 ? undefined : "lazy"}
+              priority={index === 0}
+              loading={index === 0 ? "eager" : "lazy"}
+              quality={82}
             />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.68),rgba(2,6,23,0.28)_42%,rgba(2,6,23,0.12)),linear-gradient(180deg,rgba(2,6,23,0.2),rgba(2,6,23,0.5))]" />
           </motion.div>
         </AnimatePresence>
 
-        <Container className="relative z-10 flex h-full items-center py-14 sm:py-16 lg:py-20">
-          <div className="max-w-xl rounded-[1.6rem] border border-white/15 bg-slate-950/38 p-5 shadow-[0_24px_80px_-40px_rgba(2,6,23,0.7)] backdrop-blur-md sm:p-6 lg:max-w-2xl lg:p-7">
+        <Container className="relative z-10 flex h-full items-center py-8 sm:py-12 lg:py-14">
+          <div className="w-full max-w-[19.5rem] rounded-[1.1rem] border border-white/15 bg-slate-950/34 p-3 shadow-[0_24px_80px_-40px_rgba(2,6,23,0.7)] backdrop-blur-md sm:max-w-md sm:rounded-[1.2rem] sm:p-4 lg:max-w-lg lg:p-5">
             <div className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/90 sm:text-xs">
               {siteContent.hero.eyebrow} · {active.label}
             </div>
 
-            <div className="mt-5 space-y-3">
-              <h1 className="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <div className="mt-3.5 space-y-2">
+              <h1 className="text-balance text-[1.65rem] font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl">
                 {siteContent.hero.title}
               </h1>
-              <p className="max-w-xl text-pretty text-base leading-7 text-white/82 sm:text-lg sm:leading-8">
+              <p className="max-w-md text-pretty text-[0.82rem] leading-5 text-white/84 sm:text-sm sm:leading-6">
                 {siteContent.hero.description}
               </p>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100/95">{active.caption}</p>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
               <Button asChild size="lg" className="w-full sm:w-auto">
                 <Link href={buildWhatsAppUrl(siteConfig.primaryWhatsappMessage)} target="_blank" rel="noreferrer">
                   <MessageCircle className="h-4 w-4" />
@@ -100,7 +101,7 @@ export function HeroSlider() {
               </Button>
             </div>
 
-            <div className="mt-5 hidden gap-2 sm:grid sm:grid-cols-3">
+            <div className="mt-4 hidden gap-2 sm:grid sm:grid-cols-3">
               {siteContent.hero.supportingPoints.map((point) => (
                 <div key={point} className="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs leading-5 text-white/78">
                   {point}

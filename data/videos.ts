@@ -1,22 +1,46 @@
 export interface VideoItem {
   id: string;
-  title: string;
-  description: string;
-  src: string;
-  thumbnail?: string;
-  category: "Padel" | "Pickleball" | "Cricket" | "Badminton" | "Table Tennis" | "Facility";
-  date?: string;
+  watchUrl: string;
+  embedUrl: string;
 }
 
-// Add real Elite Courts videos here after placing MP4 files in /public/videos.
-// Example:
-// {
-//   id: "padel-night-rally",
-//   title: "Padel night rally",
-//   description: "A short rally clip from Elite Courts Lahore.",
-//   src: "/videos/padel-night-rally.mp4",
-//   thumbnail: "/videos/thumbnails/padel-night-rally.webp",
-//   category: "Padel",
-//   date: "2026-04-27",
-// }
-export const videos: VideoItem[] = [];
+// Add/remove videos by editing only this array.
+// - Add a video: paste a YouTube watch/share URL in this list.
+// - Remove a video: delete the URL from this list.
+const videoLinks = ["https://www.youtube.com/watch?v=DacjaZlntM0"];
+
+function extractYouTubeId(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+
+    if (parsed.hostname.includes("youtu.be")) {
+      return parsed.pathname.slice(1) || null;
+    }
+
+    if (parsed.hostname.includes("youtube.com")) {
+      const id = parsed.searchParams.get("v");
+      if (id) return id;
+
+      if (parsed.pathname.startsWith("/embed/")) {
+        return parsed.pathname.replace("/embed/", "") || null;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+export const videos: VideoItem[] = videoLinks
+  .map((link, index) => {
+    const videoId = extractYouTubeId(link);
+    if (!videoId) return null;
+
+    return {
+      id: `${videoId}-${index}`,
+      watchUrl: link,
+      embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}`,
+    };
+  })
+  .filter((video): video is VideoItem => video !== null);

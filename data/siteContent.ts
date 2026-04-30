@@ -73,25 +73,39 @@ export const siteContent = {
     ],
     slides: [
       {
-        id: "padel-court",
-        src: "/images/slider/padel-hero.svg",
-        alt: "Illustration of a premium padel court at Elite Courts Lahore",
-        label: "Padel",
-        caption: "Panoramic glass courts with WPT-certified blue turf.",
-      },
-      {
-        id: "pickleball-court",
-        src: "/images/slider/pickleball-hero.svg",
+        id: "Padel-pic",
+        src: "/images/slider/Padel-pic.JPG",
         alt: "Illustration of players on a pickleball court at Elite Courts Lahore",
-        label: "Pickleball",
+        label: "Padel",
         caption: "Dedicated standard-sized courts for singles and doubles.",
       },
       {
-        id: "cricket-lane",
-        src: "/images/slider/cricket-hero.svg",
+        id: "Cricket-pic",
+        src: "/images/slider/Cricket-pic.JPG",
         alt: "Illustration of the cricket bowling machine practice lane at Elite Courts Lahore",
         label: "Cricket Practice",
         caption: "Bowling machine, swing and spin options, and speeds up to 160 kph.",
+      },
+      {
+        id: "Racket-court",
+        src: "/images/slider/Racket-court.png",
+        alt: "Racket court area at Elite Courts Lahore",
+        label: "Racket Sports",
+        caption: "Modern racket court space for high-energy sessions and training.",
+      },
+      {
+        id: "Elitecourtspic",
+        src: "/images/slider/Elitecourtspic.png",
+        alt: "Elite Courts facility view in Lahore",
+        label: "Facility",
+        caption: "A premium multi-sport setup designed for comfort and performance.",
+      },
+      {
+        id: "IMG_2097",
+        src: "/images/slider/IMG_2097.PNG",
+        alt: "Players practicing at Elite Courts Lahore",
+        label: "Highlights",
+        caption: "Live action moments from daily sessions at Elite Courts.",
       },
     ],
   },
@@ -221,7 +235,7 @@ export const siteContent = {
         eyebrow: "Videos",
         title: "Highlights, facility clips, and match moments.",
         description:
-          "Add compressed MP4 videos and thumbnails to the media folder, then manage what appears on this page from one video data file.",
+          "Watch Elite Courts YouTube highlights in a responsive gallery, managed from one simple links array.",
       },
       section: {
         eyebrow: "Media gallery",
@@ -232,7 +246,7 @@ export const siteContent = {
       emptyState: {
         title: "Videos will appear here soon.",
         description:
-          "No public videos are configured yet. Add MP4 files to public/videos, thumbnails to public/videos/thumbnails, and entries to data/videos.ts.",
+          "No public videos are configured yet. Add YouTube links to the array in data/videos.ts to publish them here.",
       },
     },
 
