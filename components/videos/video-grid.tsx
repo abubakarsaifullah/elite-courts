@@ -1,6 +1,5 @@
-import { CalendarDays, Film } from "lucide-react";
+import { Film } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { pageContent } from "@/data/siteContent";
 import type { VideoItem } from "@/data/videos";
 
@@ -38,31 +37,25 @@ function VideoCard({ video }: { video: VideoItem }) {
   return (
     <Card className="group h-full overflow-hidden hover:-translate-y-1 hover:border-cyan-400/25 hover:shadow-[0_28px_90px_-44px_rgba(6,182,212,0.28)]">
       <div className="relative aspect-video overflow-hidden border-b border-[color:var(--border)] bg-[color:var(--surface-strong)]">
-        <video
-          controls
-          preload="metadata"
-          poster={video.thumbnail}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-          aria-label={video.title}
-        >
-          <source src={video.src} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        <iframe
+          src={video.embedUrl}
+          title="Elite Courts YouTube video"
+          loading="lazy"
+          className="h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+        />
       </div>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge>{video.category}</Badge>
-          {video.date ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border)] px-3 py-1 text-xs text-[color:var(--muted)]">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {video.date}
-            </span>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-[color:var(--text)]">{video.title}</h3>
-          <p className="text-sm leading-7 text-[color:var(--muted)]">{video.description}</p>
-        </div>
+      <CardContent>
+        <a
+          href={video.watchUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm font-medium text-[color:var(--accent-strong)] hover:underline"
+        >
+          Watch on YouTube
+        </a>
       </CardContent>
     </Card>
   );

@@ -18,6 +18,11 @@ export function buildMetadata({ title, description, path = "/" }: MetadataInput)
       canonical,
     },
     applicationName: siteConfig.name,
+    icons: {
+      icon: "/brand/Lime-Modern-Padel-Club-Logo.jpg",
+      shortcut: "/brand/Lime-Modern-Padel-Club-Logo.jpg",
+      apple: "/brand/Lime-Modern-Padel-Club-Logo.jpg",
+    },
     keywords: [...siteContent.seo.keywords],
     openGraph: {
       type: "website",

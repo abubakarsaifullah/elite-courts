@@ -82,7 +82,7 @@ export function SiteHeader() {
               data-tooltip="Chat on WhatsApp"
             >
               <span className="whatsapp-icon-wrap whatsapp-icon-attention" aria-hidden="true">
-                <MessageCircle className="h-4 w-4 text-white transition-transform duration-200" />
+                <MessageCircle className="h-[1.15rem] w-[1.15rem] text-white transition-transform duration-200" />
               </span>
               WhatsApp
             </Link>
@@ -161,36 +161,37 @@ export function SiteHeader() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          height: 1.65rem;
-          width: 1.65rem;
+          height: 1.95rem;
+          width: 1.95rem;
           border-radius: 9999px;
           background: #25d366;
-          box-shadow: 0 8px 20px -10px rgba(37, 211, 102, 0.75);
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          box-shadow: 0 12px 26px -10px rgba(37, 211, 102, 0.92);
           filter: drop-shadow(0 0 0 rgba(37, 211, 102, 0));
-          transition: transform 240ms ease, filter 240ms ease, box-shadow 240ms ease;
+          transition: transform 260ms ease, filter 260ms ease, box-shadow 260ms ease;
         }
 
         .group:hover .whatsapp-icon-wrap,
         .group:focus-visible .whatsapp-icon-wrap {
-          transform: scale(1.1);
-          box-shadow: 0 12px 24px -10px rgba(37, 211, 102, 0.95);
-          filter: drop-shadow(0 0 0.65rem rgba(37, 211, 102, 0.45));
+          transform: scale(1.12);
+          box-shadow: 0 16px 30px -10px rgba(37, 211, 102, 1);
+          filter: drop-shadow(0 0 0.9rem rgba(37, 211, 102, 0.68));
         }
 
         .whatsapp-icon-attention {
-          animation: whatsapp-soft-pulse 3.5s ease-in-out infinite;
+          animation: whatsapp-soft-pulse 3.4s ease-in-out infinite;
         }
 
         .whatsapp-icon-attention::after {
           content: "";
           position: absolute;
-          inset: -0.3rem;
+          inset: -0.38rem;
           border-radius: 9999px;
-          border: 1px solid rgba(37, 211, 102, 0.45);
+          border: 1px solid rgba(37, 211, 102, 0.62);
           opacity: 0;
           transform: scale(0.8);
           pointer-events: none;
-          animation: whatsapp-soft-ping 3.5s ease-out infinite;
+          animation: whatsapp-soft-ping 3.4s ease-out infinite;
         }
 
         .group:hover .whatsapp-icon-attention,
@@ -208,8 +209,8 @@ export function SiteHeader() {
             filter: drop-shadow(0 0 0 rgba(37, 211, 102, 0));
           }
           80% {
-            transform: scale(1.06);
-            filter: drop-shadow(0 0 0.55rem rgba(37, 211, 102, 0.42));
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 0.78rem rgba(37, 211, 102, 0.62));
           }
         }
 
@@ -220,12 +221,12 @@ export function SiteHeader() {
             transform: scale(0.82);
           }
           80% {
-            opacity: 0.46;
+            opacity: 0.62;
             transform: scale(1);
           }
           100% {
             opacity: 0;
-            transform: scale(1.62);
+            transform: scale(1.78);
           }
         }
 
