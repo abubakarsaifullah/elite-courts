@@ -15,6 +15,9 @@ import { cn } from "@/lib/utils";
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [typedLength, setTypedLength] = useState(0);
+
+  const fullPhoneNumber = siteConfig.phoneDisplay;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -22,6 +25,17 @@ export function SiteHeader() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const isComplete = typedLength >= fullPhoneNumber.length;
+    const nextDelay = isComplete ? 2600 : 90;
+
+    const timer = window.setTimeout(() => {
+      setTypedLength((current) => (current >= fullPhoneNumber.length ? 0 : current + 1));
+    }, nextDelay);
+
+    return () => window.clearTimeout(timer);
+  }, [typedLength, fullPhoneNumber]);
 
   return (
     <header
@@ -52,7 +66,11 @@ export function SiteHeader() {
               className="group inline-flex h-11 items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-semibold text-[color:var(--text)] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-400/35 hover:bg-[color:var(--surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/30"
             >
               <Phone className="h-4 w-4 text-[color:var(--accent-strong)] transition-transform duration-200 group-hover:-rotate-6" />
-              {siteConfig.phoneDisplay}
+              <span className="inline-flex items-center font-mono tabular-nums" aria-label={fullPhoneNumber}>
+                <span className="inline-block text-left" style={{ width: `${fullPhoneNumber.length}ch` }}>
+                  {fullPhoneNumber.slice(0, typedLength)}
+                </span>
+              </span>
             </Link>
 
             <Link
@@ -61,8 +79,11 @@ export function SiteHeader() {
               rel="noreferrer"
               aria-label="Book on WhatsApp"
               className="group inline-flex h-11 items-center gap-2 rounded-full bg-emerald-500 px-4 text-sm font-semibold text-slate-950 shadow-[0_16px_50px_-24px_rgba(16,185,129,0.9)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+              data-tooltip="Chat on WhatsApp"
             >
-              <MessageCircle className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              <span className="whatsapp-icon-wrap whatsapp-icon-attention" aria-hidden="true">
+                <MessageCircle className="h-4 w-4 text-white transition-transform duration-200" />
+              </span>
               WhatsApp
             </Link>
 
@@ -133,6 +154,121 @@ export function SiteHeader() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      <style jsx>{`
+        .whatsapp-icon-wrap {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 1.65rem;
+          width: 1.65rem;
+          border-radius: 9999px;
+          background: #25d366;
+          box-shadow: 0 8px 20px -10px rgba(37, 211, 102, 0.75);
+          filter: drop-shadow(0 0 0 rgba(37, 211, 102, 0));
+          transition: transform 240ms ease, filter 240ms ease, box-shadow 240ms ease;
+        }
+
+        .group:hover .whatsapp-icon-wrap,
+        .group:focus-visible .whatsapp-icon-wrap {
+          transform: scale(1.1);
+          box-shadow: 0 12px 24px -10px rgba(37, 211, 102, 0.95);
+          filter: drop-shadow(0 0 0.65rem rgba(37, 211, 102, 0.45));
+        }
+
+        .whatsapp-icon-attention {
+          animation: whatsapp-soft-pulse 3.5s ease-in-out infinite;
+        }
+
+        .whatsapp-icon-attention::after {
+          content: "";
+          position: absolute;
+          inset: -0.3rem;
+          border-radius: 9999px;
+          border: 1px solid rgba(37, 211, 102, 0.45);
+          opacity: 0;
+          transform: scale(0.8);
+          pointer-events: none;
+          animation: whatsapp-soft-ping 3.5s ease-out infinite;
+        }
+
+        .group:hover .whatsapp-icon-attention,
+        .group:hover .whatsapp-icon-attention::after,
+        .group:focus-visible .whatsapp-icon-attention,
+        .group:focus-visible .whatsapp-icon-attention::after {
+          animation-play-state: paused;
+        }
+
+        @keyframes whatsapp-soft-pulse {
+          0%,
+          68%,
+          100% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 0 rgba(37, 211, 102, 0));
+          }
+          80% {
+            transform: scale(1.06);
+            filter: drop-shadow(0 0 0.55rem rgba(37, 211, 102, 0.42));
+          }
+        }
+
+        @keyframes whatsapp-soft-ping {
+          0%,
+          68% {
+            opacity: 0;
+            transform: scale(0.82);
+          }
+          80% {
+            opacity: 0.46;
+            transform: scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1.62);
+          }
+        }
+
+        .group[data-tooltip] {
+          position: relative;
+        }
+
+        .group[data-tooltip]::after {
+          content: attr(data-tooltip);
+          position: absolute;
+          left: 50%;
+          top: calc(100% + 0.45rem);
+          transform: translateX(-50%) translateY(-2px);
+          border-radius: 9999px;
+          background: rgba(2, 6, 23, 0.9);
+          color: #f8fafc;
+          font-size: 0.69rem;
+          line-height: 1;
+          padding: 0.42rem 0.58rem;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 220ms ease, transform 220ms ease;
+        }
+
+        .group[data-tooltip]:hover::after,
+        .group[data-tooltip]:focus-visible::after {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .whatsapp-icon-wrap,
+          .whatsapp-icon-attention,
+          .whatsapp-icon-attention::after,
+          .group[data-tooltip]::after {
+            animation: none !important;
+            transition: none !important;
+            transform: none !important;
+            filter: none !important;
+          }
+        }
+      `}</style>
     </header>
   );
 }
