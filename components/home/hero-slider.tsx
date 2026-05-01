@@ -69,44 +69,38 @@ export function HeroSlider() {
           </motion.div>
         </AnimatePresence>
 
-        <Container className="relative z-10 flex h-full items-center py-8 sm:py-12 lg:py-14">
-          <div className="w-full max-w-[19.5rem] rounded-[1.1rem] border border-white/15 bg-slate-950/34 p-3 shadow-[0_24px_80px_-40px_rgba(2,6,23,0.7)] backdrop-blur-md sm:max-w-md sm:rounded-[1.2rem] sm:p-4 lg:max-w-lg lg:p-5">
-            <div className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/90 sm:text-xs">
-              {siteContent.hero.eyebrow} · {active.label}
-            </div>
+        <Container className="relative z-10 flex h-full items-end justify-center pb-6 sm:pb-8 lg:pb-10">
+          <div className="w-full max-w-4xl text-center">
+            <h1 className="mx-auto max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap text-base font-semibold tracking-tight text-white drop-shadow-[0_10px_24px_rgba(2,6,23,0.95)] sm:text-xl lg:text-2xl">
+              {siteContent.hero.title}
+            </h1>
+            <p className="mx-auto mt-1 max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap text-xs leading-5 text-white/90 drop-shadow-[0_8px_20px_rgba(2,6,23,0.95)] sm:text-sm">
+              {active.caption}
+            </p>
 
-            <div className="mt-3.5 space-y-2">
-              <h1 className="text-balance text-[1.65rem] font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl">
-                {siteContent.hero.title}
-              </h1>
-              <p className="max-w-md text-pretty text-[0.82rem] leading-5 text-white/84 sm:text-sm sm:leading-6">
-                {siteContent.hero.description}
-              </p>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100/95">{active.caption}</p>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-              <Button asChild size="lg" className="w-full sm:w-auto">
+            <div className="mt-3 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
+              <Button
+                asChild
+                size="lg"
+                className="h-11 w-full rounded-full shadow-[0_14px_36px_-18px_rgba(16,185,129,0.85)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_18px_42px_-18px_rgba(16,185,129,0.95)] sm:w-auto"
+              >
                 <Link href={buildWhatsAppUrl(siteConfig.primaryWhatsappMessage)} target="_blank" rel="noreferrer">
                   <MessageCircle className="h-4 w-4" />
-                  {siteContent.hero.primaryButtonLabel}
+                  Book a Court
                 </Link>
               </Button>
 
-              <Button asChild variant="secondary" size="lg" className="w-full border-white/15 bg-white/10 text-white hover:bg-white/15 sm:w-auto">
+              <Button
+                asChild
+                variant="secondary"
+                size="lg"
+                className="h-11 w-full rounded-full border-slate-100/90 bg-slate-50 text-slate-900 shadow-[0_14px_38px_-20px_rgba(248,250,252,0.98)] transition-all duration-300 hover:scale-[1.05] hover:bg-white hover:shadow-[0_24px_50px_-20px_rgba(248,250,252,0.98)] sm:w-auto"
+              >
                 <Link href="/pricing">
-                  {siteContent.hero.secondaryButtonLabel}
                   <ArrowRight className="h-4 w-4" />
+                  View Pricing
                 </Link>
               </Button>
-            </div>
-
-            <div className="mt-4 hidden gap-2 sm:grid sm:grid-cols-3">
-              {siteContent.hero.supportingPoints.map((point) => (
-                <div key={point} className="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs leading-5 text-white/78">
-                  {point}
-                </div>
-              ))}
             </div>
           </div>
         </Container>

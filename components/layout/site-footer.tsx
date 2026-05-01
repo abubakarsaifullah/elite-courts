@@ -1,14 +1,60 @@
 import Link from "next/link";
-import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/brand/logo";
 import { navigation, siteConfig, siteContent } from "@/data/siteContent";
 
 function getIcon(label: string) {
-  if (label === "Facebook") return <Facebook className="h-4 w-4" />;
-  if (label === "Instagram") return <Instagram className="h-4 w-4" />;
-  if (label === "YouTube") return <Youtube className="h-4 w-4" />;
-  return <span className="text-xs font-semibold">TT</span>;
+  const baseClass = "h-4 w-4";
+
+  if (label === "Facebook") {
+    return (
+      <svg viewBox="0 0 24 24" className={baseClass} aria-hidden="true">
+        <path
+          fill="#1877F2"
+          d="M24 12a12 12 0 1 0-13.88 11.85v-8.39h-3.03V12h3.03V9.36c0-2.99 1.79-4.64 4.53-4.64 1.31 0 2.68.23 2.68.23v2.94h-1.51c-1.49 0-1.95.93-1.95 1.87V12h3.32l-.53 3.46h-2.79v8.39A12 12 0 0 0 24 12Z"
+        />
+      </svg>
+    );
+  }
+
+  if (label === "Instagram") {
+    return (
+      <svg viewBox="0 0 24 24" className={baseClass} aria-hidden="true">
+        <path
+          fill="#E4405F"
+          d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6Zm9.65 1.5a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"
+        />
+      </svg>
+    );
+  }
+
+  if (label === "YouTube") {
+    return (
+      <svg viewBox="0 0 24 24" className={baseClass} aria-hidden="true">
+        <path
+          fill="#FF0000"
+          d="M23.5 7.2a3 3 0 0 0-2.1-2.1C19.5 4.5 12 4.5 12 4.5s-7.5 0-9.4.6A3 3 0 0 0 .5 7.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-4.8ZM9.6 15.3V8.7L15.8 12l-6.2 3.3Z"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className={baseClass} aria-hidden="true">
+      <path
+        fill="#010101"
+        d="M19.6 6.7c-1.3.9-2.7 1.5-4.1 1.8v8.6c0 2.5-2.2 4.6-5 4.6s-5-2-5-4.6 2.2-4.6 5-4.6c.5 0 1 .1 1.5.2v2.7a2.1 2.1 0 0 0-1.5-.6c-1.2 0-2.2 1-2.2 2.2s1 2.2 2.2 2.2 2.2-1 2.2-2.2V2h2.8c.2 1.8 1.2 3.5 2.8 4.5.9.6 1.9 1 2.9 1.1v3.1a8.1 8.1 0 0 1-1.6-.4Z"
+      />
+    </svg>
+  );
+}
+
+function getIconHoverClass(label: string) {
+  if (label === "Facebook") return "hover:text-[#1877F2] hover:border-[#1877F2]/45";
+  if (label === "Instagram") return "hover:text-[#E4405F] hover:border-[#E4405F]/45";
+  if (label === "YouTube") return "hover:text-[#FF0000] hover:border-[#FF0000]/45";
+  return "hover:text-[#000000] hover:border-[#000000]/35 dark:hover:text-white dark:hover:border-white/45";
 }
 
 export function SiteFooter() {
@@ -58,7 +104,7 @@ export function SiteFooter() {
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--muted-strong)] transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-400/35 hover:text-[color:var(--text)] hover:shadow-[0_18px_50px_-34px_rgba(6,182,212,0.6)]"
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_50px_-34px_rgba(6,182,212,0.6)] ${getIconHoverClass(link.label)}`}
                   aria-label={link.label}
                 >
                   {getIcon(link.label)}
