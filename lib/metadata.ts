@@ -19,9 +19,13 @@ export function buildMetadata({ title, description, path = "/" }: MetadataInput)
     },
     applicationName: siteConfig.name,
     icons: {
-      icon: "/brand/Lime-Modern-Padel-Club-Logo.jpg",
-      shortcut: "/brand/Lime-Modern-Padel-Club-Logo.jpg",
-      apple: "/brand/Lime-Modern-Padel-Club-Logo.jpg",
+      icon: [
+        { url: "/favicon.svg", sizes: "any", type: "image/svg+xml" },
+        { url: "/icon.svg", sizes: "32x32", type: "image/svg+xml" },
+        { url: "/icon.svg", sizes: "64x64", type: "image/svg+xml" },
+      ],
+      shortcut: "/favicon.svg",
+      apple: "/icon.svg",
     },
     keywords: [...siteContent.seo.keywords],
     openGraph: {
