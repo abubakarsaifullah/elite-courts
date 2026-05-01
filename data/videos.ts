@@ -70,7 +70,7 @@ function extractTikTokVideoId(url: string): string | null {
 }
 
 export const videos: VideoItem[] = videoLinks
-  .map((link, index) => {
+  .map((link, index): VideoItem | null => {
     const youTubeData = extractYouTube(link);
     if (youTubeData) {
       return {
