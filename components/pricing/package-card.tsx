@@ -18,6 +18,10 @@ function getBadgeLabel(item: SitePackage) {
   return item.badge;
 }
 
+function isAttentionBadge(label: string | undefined) {
+  return label === "Popular" || label === "Best Value" || label === "Recommended";
+}
+
 export function PricingPackageCard({ item, compact = false }: PricingPackageCardProps) {
   const original = formatOriginalPrice(item);
   const savings = getPackageSavings(item);
@@ -36,7 +40,16 @@ export function PricingPackageCard({ item, compact = false }: PricingPackageCard
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <Badge>{item.sport}</Badge>
-            {badge ? <Badge className="border-cyan-400/25 bg-[color:var(--surface-strong)] px-2 py-0.5 text-[10px]">{badge}</Badge> : null}
+            {badge ? (
+              <Badge
+                className={cn(
+                  "border-cyan-400/30 bg-[color:var(--surface-strong)] px-2 py-0.5 text-[10px] font-extrabold",
+                  isAttentionBadge(badge) && "vibrate-1 border-cyan-300/55 bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]",
+                )}
+              >
+                {badge}
+              </Badge>
+            ) : null}
           </div>
 
           <div className="space-y-2">
@@ -46,7 +59,7 @@ export function PricingPackageCard({ item, compact = false }: PricingPackageCard
 
           <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 transition-colors duration-300 group-hover:border-cyan-400/25">
             {original ? <p className="text-sm text-[color:var(--muted)] line-through">{original}</p> : null}
-            <p className="mt-1 font-display text-3xl font-semibold text-[color:var(--text)]">{formatPackagePrice(item)}</p>
+            <p className="mt-1 font-display text-3xl font-extrabold text-[color:var(--text)]">{formatPackagePrice(item)}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs text-[color:var(--muted-strong)]">
               <span className="rounded-full bg-[color:var(--surface)] px-3 py-1 ring-1 ring-[color:var(--border)]">{item.duration}</span>
               {item.availability ? (
@@ -56,7 +69,7 @@ export function PricingPackageCard({ item, compact = false }: PricingPackageCard
           </div>
 
           {item.promotionLabel || savings ? (
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-[color:var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[color:var(--accent-strong)]">
+            <div className="vibrate-1 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-[color:var(--accent-soft)] px-3 py-1.5 text-xs font-extrabold text-[color:var(--accent-strong)]">
               <Sparkles className="h-3.5 w-3.5" />
               {item.promotionLabel || `Save ${item.currency} ${savings?.toLocaleString("en-PK")}`}
             </div>

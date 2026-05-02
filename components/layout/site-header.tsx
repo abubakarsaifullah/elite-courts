@@ -18,7 +18,6 @@ export function SiteHeader() {
   const [typedLength, setTypedLength] = useState(0);
 
   const fullPhoneNumber = siteConfig.phoneDisplay;
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -49,7 +48,7 @@ export function SiteHeader() {
       <Container>
         <div className="flex h-[4.75rem] items-center justify-between gap-4">
           <Link href="/" className="flex min-w-0 items-center" aria-label="Elite Courts home">
-            <Logo />
+            <Logo priority />
           </Link>
 
           <nav className="hidden items-center gap-1 xl:flex" aria-label="Main navigation">

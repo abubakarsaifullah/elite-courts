@@ -1,3 +1,5 @@
+import { sliderImages } from "./sliderImages";
+
 export const siteContent = {
   config: {
     name: "Elite Courts",
@@ -18,7 +20,7 @@ export const siteContent = {
     { href: "/sports", label: "Sports" },
     { href: "/pricing", label: "Pricing" },
     { href: "/memberships", label: "Memberships" },
-    { href: "/videos", label: "Videos" },
+    { href: "/videos", label: "Highlights" },
     { href: "/contact", label: "Contact" },
   ],
 
@@ -60,54 +62,18 @@ export const siteContent = {
   ],
 
   hero: {
-    eyebrow: "Elite Sports Experience",
-    title: "Premium courts and practice spaces in Lahore.",
+    eyebrow: "Elite Courts Lahore",
+    title: "Play your next game at Elite Courts.",
     description:
-      "Book padel, pickleball, cricket bowling machine practice, badminton, and table tennis at Elite Courts. Clear rates, clean facilities, and quick WhatsApp booking make it easy to plan your next session.",
-    primaryButtonLabel: "Book a court",
-    secondaryButtonLabel: "View pricing",
+      "Book padel, pickleball, cricket bowling machine practice, badminton, and table tennis in Lahore. Check the rates, choose your game, and message us on WhatsApp when you are ready to book.",
+    primaryButtonLabel: "Book on WhatsApp",
+    secondaryButtonLabel: "See packages",
     supportingPoints: [
       "Padel, pickleball, cricket, badminton and table tennis",
       "Equipment and useful player amenities available",
       "Fast booking through WhatsApp",
     ],
-    slides: [
-      {
-        id: "Padel-pic",
-        src: "/images/slider/Padel-pic.JPG",
-        alt: "Illustration of players on a pickleball court at Elite Courts Lahore",
-        label: "Padel",
-        caption: "Dedicated standard-sized courts for singles and doubles.",
-      },
-      {
-        id: "Cricket-pic",
-        src: "/images/slider/Cricket-pic.JPG",
-        alt: "Illustration of the cricket bowling machine practice lane at Elite Courts Lahore",
-        label: "Cricket Practice",
-        caption: "Bowling machine, swing and spin options, and speeds up to 160 kph.",
-      },
-      {
-        id: "Racket-court",
-        src: "/images/slider/Racket-court.png",
-        alt: "Racket court area at Elite Courts Lahore",
-        label: "Racket Sports",
-        caption: "Modern racket court space for high-energy sessions and training.",
-      },
-      {
-        id: "Elitecourtspic",
-        src: "/images/slider/Elitecourtspic.png",
-        alt: "Elite Courts facility view in Lahore",
-        label: "Facility",
-        caption: "A premium multi-sport setup designed for comfort and performance.",
-      },
-      {
-        id: "IMG_2097",
-        src: "/images/slider/IMG_2097.PNG",
-        alt: "Players practicing at Elite Courts Lahore",
-        label: "Highlights",
-        caption: "Live action moments from daily sessions at Elite Courts.",
-      },
-    ],
+    slides: sliderImages,
   },
 
   pages: {
@@ -116,40 +82,40 @@ export const siteContent = {
         eyebrow: "Sports offered",
         title: "Choose your game and get straight to the court.",
         description:
-          "Every sport has its own simple section, so visitors can quickly understand what is available, what is included, and how to book.",
+          "Browse each sport, see what is included, and move straight to pricing or WhatsApp booking.",
         actionLabel: "Explore all sports",
       },
       why: {
         eyebrow: "Why choose Elite Courts",
         title: "A clean, comfortable facility for serious practice and friendly games.",
         description:
-          "Elite Courts is built around clear booking, quality playing areas, useful amenities, and an experience that feels easy from the first visit.",
+          "Elite Courts keeps the experience simple: good courts, clear prices, practical amenities, and quick booking help when you need it.",
       },
       pricing: {
         eyebrow: "Pricing highlights",
         title: "Clear rates before you book.",
         description:
-          "The most requested starting prices are easy to scan on the homepage. The full pricing page gives you every current package, bundle, and membership.",
+          "The most requested starting rates are easy to scan here. The full pricing page lists current packages, bundles, and memberships by sport.",
         actionLabel: "View all pricing",
       },
       memberships: {
         eyebrow: "Membership highlights",
         title: "Monthly options for regular players.",
         description:
-          "Cricket Academy practice plans and racket-sports memberships are organized so frequent players can compare them without confusion.",
+          "Cricket Academy practice plans and racket-sports memberships are grouped clearly for regular players.",
         actionLabel: "View memberships",
       },
       amenities: {
         eyebrow: "Amenities",
         title: "Small comforts that make every session easier.",
         description:
-          "Players can use practical on-site amenities such as recording access, changing rooms, Wi-Fi, parking, refreshments, and clean bathrooms.",
+          "Players can use practical on-site amenities including recording access, changing rooms, Wi-Fi, parking, refreshments, and clean bathrooms.",
       },
       location: {
         eyebrow: "Location",
         title: "Easy to find on Main Canal Road.",
         description:
-          "The address, map, directions, phone, and WhatsApp options are placed together so visitors can plan their visit quickly.",
+          "Address, map, directions, phone, and WhatsApp options are kept together so planning your visit is easier.",
       },
       cta: {
         title: "Ready to book your next session?",
@@ -166,13 +132,13 @@ export const siteContent = {
         eyebrow: "Sports",
         title: "Padel, pickleball, cricket practice, badminton, and table tennis in one place.",
         description:
-          "Compare each sport, check what is included, and move to pricing or WhatsApp booking from the same card.",
+          "Compare each sport, check what is included, and jump to pricing or WhatsApp booking from the same card.",
       },
       section: {
         eyebrow: "All sports",
         title: "Built for competitive rallies, focused practice, and casual games.",
         description:
-          "The facility information below keeps the current Elite Courts details clear, practical, and easy to understand on any screen size.",
+          "The details below keep each sport clear, practical, and easy to understand on any screen size.",
       },
       cta: {
         title: "Not sure which slot or package to choose?",
@@ -187,20 +153,20 @@ export const siteContent = {
         "View current Elite Courts prices for padel, pickleball, cricket bowling machine, table tennis, badminton, and monthly memberships in Lahore.",
       hero: {
         eyebrow: "Pricing",
-        title: "Current packages and rates, organized for quick booking decisions.",
+        title: "Current packages and rates, organized by sport.",
         description:
-          "Every price is kept in one editable package file and displayed in clear cards with availability, savings, inclusions, and WhatsApp booking links.",
+          "Compare court rates, multi-hour bundles, cricket practice sessions, indoor sports, and monthly plans before you book.",
       },
       intro: {
         eyebrow: "Package categories",
         title: "Browse by sport or jump straight to the package you need.",
         description:
-          "The pricing layout separates padel, pickleball, cricket, table tennis, badminton, and memberships so visitors do not have to hunt through a long mixed list.",
+          "Padel, pickleball, cricket, table tennis, badminton, and memberships are separated so you can find the right option faster.",
       },
       cta: {
         title: "Want a fast answer on availability?",
         description:
-          "Open WhatsApp from any package card and your booking message will already include the package context.",
+          "Open WhatsApp from any package card and your message will already include the package you selected.",
       },
     },
 
@@ -218,7 +184,7 @@ export const siteContent = {
         eyebrow: "Monthly plans",
         title: "Compare Cricket Academy and racket-sports memberships.",
         description:
-          "The plan names, limits, prices, and listed perks are kept accurate and easy to update from the packages data file.",
+          "Plan names, limits, prices, and listed perks are shown clearly so regular players can compare them without confusion.",
       },
       cta: {
         title: "Interested in a recurring plan?",
@@ -228,25 +194,25 @@ export const siteContent = {
     },
 
     videos: {
-      metadataTitle: "Elite Courts Videos | Sports Highlights and Facility Media",
+      metadataTitle: "Elite Courts Highlights | Sports Videos and Facility Media",
       metadataDescription:
-        "Watch Elite Courts videos and sports highlights for padel, pickleball, cricket practice, badminton, table tennis, and facility updates.",
+        "Watch Elite Courts highlights, short clips, and facility media for padel, pickleball, cricket practice, badminton, and table tennis.",
       hero: {
-        eyebrow: "Videos",
-        title: "Highlights, facility clips, and match moments.",
+        eyebrow: "Highlights",
+        title: "Match clips, practice moments, and facility videos.",
         description:
-          "Watch Elite Courts YouTube highlights in a responsive gallery, managed from one simple links array.",
+          "Watch public Elite Courts videos in a clean gallery. YouTube and TikTok clips load only when you choose to play them, which keeps the page fast on mobile.",
       },
       section: {
         eyebrow: "Media gallery",
-        title: "A simple video grid for future highlights.",
+        title: "Recent videos from Elite Courts.",
         description:
-          "Use this page for padel rallies, cricket practice clips, pickleball games, facility tours, and other real Elite Courts media when available.",
+          "Use the filters to browse clips by source or category. Add future YouTube, TikTok, Instagram, external, or local MP4 videos from one data file.",
       },
       emptyState: {
         title: "Videos will appear here soon.",
         description:
-          "No public videos are configured yet. Add YouTube links to the array in data/videos.ts to publish them here.",
+          "Add public YouTube, TikTok, Instagram, external, or local MP4 entries to data/videos.ts to publish them here.",
       },
     },
 
@@ -623,7 +589,7 @@ export const siteConfig = {
 } as const;
 
 export const navigation = siteContent.navigation;
-export const heroSlides = siteContent.hero.slides;
+export const heroSlides = sliderImages;
 export const amenities = siteContent.amenities;
 export const reasonsToChoose = siteContent.reasonsToChoose;
 export const sports = siteContent.sports;

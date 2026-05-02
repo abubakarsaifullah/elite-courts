@@ -4,6 +4,7 @@ import { Manrope, Sora } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { WhatsAppFloatingButton } from "@/components/whatsapp-floating-button";
+import { BackToTopButton } from "@/components/back-to-top-button";
 import { buildMetadata } from "@/lib/metadata";
 import { siteContent } from "@/data/siteContent";
 import "./globals.css";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />
+          <BackToTopButton />
           <WhatsAppFloatingButton />
         </div>
       </body>
