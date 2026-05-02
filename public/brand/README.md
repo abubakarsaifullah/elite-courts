@@ -1,6 +1,28 @@
-This folder contains the current reusable brand assets for the upgraded header.
+# Brand assets
 
-The logo component is currently wired to:
-- /public/brand/original-logo.svg
+The website header and footer use:
 
-If you want to replace it with a different exported master file later, update components/brand/logo.tsx and keep the same dimensions.
+```txt
+public/brand/elite-courts-logo.webp
+```
+
+The original uploaded logo is kept as:
+
+```txt
+public/brand/Lime-Modern-Padel-Club-Logo.jpg
+```
+
+Recommended replacement logo:
+
+- Square canvas, minimum 512 x 512 px
+- PNG or WebP
+- Clear mark in the center
+- Enough padding so it looks good inside a circular frame
+- Avoid tiny text that becomes unreadable in the header
+
+The favicon is a circular SVG in:
+
+```txt
+app/favicon.svg
+app/icon.svg
+```

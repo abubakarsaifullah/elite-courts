@@ -10,11 +10,12 @@ import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { SportCard } from "@/components/sport-card";
 import { CtaBanner } from "@/components/cta-banner";
+import { TestimonialsSection } from "@/components/testimonials-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { JsonLd } from "@/components/seo/json-ld";
 import { pageContent, reasonsToChoose, siteConfig, sports } from "@/data/siteContent";
-import { featuredHomePackages, memberships, packages, quickPricingHighlights } from "@/data/packages";
+import { featuredHomePackages, memberships, packagePriceRange, packages, quickPricingHighlights } from "@/data/packages";
 
 const schema = {
   "@context": "https://schema.org",
@@ -24,7 +25,7 @@ const schema = {
   description: siteConfig.locationSummary,
   telephone: "+92 308 4708858",
   email: siteConfig.email,
-  priceRange: "Rs 400 - Rs 25,000",
+  priceRange: packagePriceRange,
   address: {
     "@type": "PostalAddress",
     streetAddress: "23-A, P&D Cooperative Housing Society, Main Canal Road",
@@ -153,6 +154,9 @@ export default function HomePage() {
           </div>
         </Container>
       </section>
+
+
+      <TestimonialsSection />
 
       <section className="py-16 sm:py-20">
         <Container className="space-y-10">

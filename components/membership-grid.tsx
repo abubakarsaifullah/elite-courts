@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { buildWhatsAppUrl } from "@/data/siteContent";
 import { formatPackagePrice, type SitePackage } from "@/data/packages";
+import { cn } from "@/lib/utils";
 
 interface MembershipCardProps {
   membership: {
@@ -15,6 +16,10 @@ interface MembershipCardProps {
     perks: readonly string[];
     whatsappMessage: string;
   };
+}
+
+function isAttentionBadge(label: string | undefined) {
+  return label === "Popular" || label === "Best Value" || label === "Recommended";
 }
 
 export function MembershipCard({ membership }: MembershipCardProps) {
@@ -33,9 +38,13 @@ export function MembershipCard({ membership }: MembershipCardProps) {
             <div key={plan.id} className="flex items-center justify-between gap-3 border-b border-[color:var(--border)] py-2 last:border-b-0">
               <div className="flex items-center gap-3">
                 <span className="text-sm text-[color:var(--muted-strong)]">{plan.availability || plan.title}</span>
-                {plan.badge ? <Badge className="px-2 py-0.5 text-[10px]">{plan.badge}</Badge> : null}
+                {plan.badge ? (
+                  <Badge className={cn("px-2 py-0.5 text-[10px] font-extrabold", isAttentionBadge(plan.badge) && "vibrate-1")}>
+                    {plan.badge}
+                  </Badge>
+                ) : null}
               </div>
-              <span className="text-sm font-semibold text-[color:var(--text)]">{formatPackagePrice(plan)}</span>
+              <span className="text-sm font-extrabold text-[color:var(--text)]">{formatPackagePrice(plan)}</span>
             </div>
           ))}
         </div>

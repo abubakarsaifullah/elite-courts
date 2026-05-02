@@ -40,21 +40,32 @@ function getIcon(label: string) {
     );
   }
 
+  if (label === "TikTok") {
+    return (
+      <svg viewBox="0 0 24 24" className={`${baseClass} text-[#010101] dark:text-white`} aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M19.6 6.7c-1.3.9-2.7 1.5-4.1 1.8v8.6c0 2.5-2.2 4.6-5 4.6s-5-2-5-4.6 2.2-4.6 5-4.6c.5 0 1 .1 1.5.2v2.7a2.1 2.1 0 0 0-1.5-.6c-1.2 0-2.2 1-2.2 2.2s1 2.2 2.2 2.2 2.2-1 2.2-2.2V2h2.8c.2 1.8 1.2 3.5 2.8 4.5.9.6 1.9 1 2.9 1.1v3.1a8.1 8.1 0 0 1-1.6-.4Z"
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" className={baseClass} aria-hidden="true">
       <path
-        fill="#010101"
-        d="M19.6 6.7c-1.3.9-2.7 1.5-4.1 1.8v8.6c0 2.5-2.2 4.6-5 4.6s-5-2-5-4.6 2.2-4.6 5-4.6c.5 0 1 .1 1.5.2v2.7a2.1 2.1 0 0 0-1.5-.6c-1.2 0-2.2 1-2.2 2.2s1 2.2 2.2 2.2 2.2-1 2.2-2.2V2h2.8c.2 1.8 1.2 3.5 2.8 4.5.9.6 1.9 1 2.9 1.1v3.1a8.1 8.1 0 0 1-1.6-.4Z"
+        fill="currentColor"
+        d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.2 10.7-5.8 3.5A.8.8 0 0 1 9.2 15.5v-7a.8.8 0 0 1 1.2-.7l5.8 3.5a.82.82 0 0 1 0 1.4Z"
       />
     </svg>
   );
 }
 
 function getIconHoverClass(label: string) {
-  if (label === "Facebook") return "hover:text-[#1877F2] hover:border-[#1877F2]/45";
-  if (label === "Instagram") return "hover:text-[#E4405F] hover:border-[#E4405F]/45";
-  if (label === "YouTube") return "hover:text-[#FF0000] hover:border-[#FF0000]/45";
-  return "hover:text-[#000000] hover:border-[#000000]/35 dark:hover:text-white dark:hover:border-white/45";
+  if (label === "Facebook") return "hover:border-[#1877F2]/45";
+  if (label === "Instagram") return "hover:border-[#E4405F]/45";
+  if (label === "YouTube") return "hover:border-[#FF0000]/45";
+  return "hover:border-[#000000]/35 dark:hover:border-white/45";
 }
 
 export function SiteFooter() {
@@ -87,7 +98,7 @@ export function SiteFooter() {
               {navigation.slice(1).map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className="group inline-flex items-center gap-2 transition hover:text-[color:var(--text)]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--accent)] opacity-50 transition group-hover:opacity-100" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--accent)] opacity-50 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
                     {item.label}
                   </Link>
                 </li>
@@ -104,8 +115,8 @@ export function SiteFooter() {
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_50px_-34px_rgba(6,182,212,0.6)] ${getIconHoverClass(link.label)}`}
-                  aria-label={link.label}
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_18px_50px_-34px_rgba(6,182,212,0.6)] ${getIconHoverClass(link.label)}`}
+                  aria-label={`Open Elite Courts on ${link.label}`}
                 >
                   {getIcon(link.label)}
                 </Link>

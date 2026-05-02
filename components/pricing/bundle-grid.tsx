@@ -22,6 +22,10 @@ interface PickleballBundle {
   savings: string | null;
 }
 
+function isAttentionBadge(label: string | undefined) {
+  return label === "Popular" || label === "Best Value" || label === "Recommended";
+}
+
 export function PadelBundleGrid({ bundles }: { bundles: readonly PadelBundle[] }) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -39,7 +43,7 @@ export function PadelBundleGrid({ bundles }: { bundles: readonly PadelBundle[] }
                 <p className="text-lg font-semibold text-[color:var(--text)]">{bundle.label}</p>
                 <p className="mt-1 text-sm text-[color:var(--muted)]">Multi-hour bundle</p>
               </div>
-              <Badge>{bundle.badge}</Badge>
+              <Badge className={cn("font-extrabold", isAttentionBadge(bundle.badge) && "vibrate-1")}>{bundle.badge}</Badge>
             </div>
 
             <div className="grid gap-3 rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
@@ -48,19 +52,19 @@ export function PadelBundleGrid({ bundles }: { bundles: readonly PadelBundle[] }
                 {bundle.weekday.originalPrice ? (
                   <p className="mt-2 text-sm text-[color:var(--muted)] line-through">{bundle.weekday.originalPrice}</p>
                 ) : null}
-                <p className="text-2xl font-semibold text-[color:var(--text)]">{bundle.weekday.price}</p>
+                <p className="text-2xl font-extrabold text-[color:var(--text)]">{bundle.weekday.price}</p>
               </div>
               <div className="rounded-2xl bg-[color:var(--surface)] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--accent-strong)]">Weekend</p>
                 {bundle.weekend.originalPrice ? (
                   <p className="mt-2 text-sm text-[color:var(--muted)] line-through">{bundle.weekend.originalPrice}</p>
                 ) : null}
-                <p className="text-2xl font-semibold text-[color:var(--text)]">{bundle.weekend.price}</p>
+                <p className="text-2xl font-extrabold text-[color:var(--text)]">{bundle.weekend.price}</p>
               </div>
             </div>
 
             {bundle.savings ? (
-              <p className="text-sm text-[color:var(--accent-strong)]">{bundle.savings}</p>
+              <p className="vibrate-1 text-sm font-extrabold text-[color:var(--accent-strong)]">{bundle.savings}</p>
             ) : (
               <p className="text-sm text-[color:var(--muted)]">Standard rate</p>
             )}
@@ -98,7 +102,7 @@ export function PickleballBundleGrid({ bundles }: { bundles: readonly Pickleball
                 <p className="text-lg font-semibold text-[color:var(--text)]">{bundle.label}</p>
                 <p className="mt-1 text-sm text-[color:var(--muted)]">Flat rate all week</p>
               </div>
-              <Badge>{bundle.badge}</Badge>
+              <Badge className={cn("font-extrabold", isAttentionBadge(bundle.badge) && "vibrate-1")}>{bundle.badge}</Badge>
             </div>
 
             <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
@@ -106,11 +110,11 @@ export function PickleballBundleGrid({ bundles }: { bundles: readonly Pickleball
               {bundle.rate.originalPrice ? (
                 <p className="mt-2 text-sm text-[color:var(--muted)] line-through">{bundle.rate.originalPrice}</p>
               ) : null}
-              <p className="text-3xl font-semibold text-[color:var(--text)]">{bundle.rate.price}</p>
+              <p className="text-3xl font-extrabold text-[color:var(--text)]">{bundle.rate.price}</p>
             </div>
 
             {bundle.savings ? (
-              <p className="text-sm text-[color:var(--accent-strong)]">{bundle.savings}</p>
+              <p className="vibrate-1 text-sm font-extrabold text-[color:var(--accent-strong)]">{bundle.savings}</p>
             ) : (
               <p className="text-sm text-[color:var(--muted)]">Standard rate</p>
             )}

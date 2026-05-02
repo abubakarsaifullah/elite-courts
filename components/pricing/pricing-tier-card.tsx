@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buildWhatsAppUrl } from "@/data/siteContent";
+import { cn } from "@/lib/utils";
 
 interface PricingTierCardProps {
   label: string;
@@ -15,6 +16,10 @@ interface PricingTierCardProps {
   badge?: string | null;
 }
 
+function isAttentionBadge(label: string | undefined | null) {
+  return label === "Popular" || label === "Best Value" || label === "Recommended";
+}
+
 export function PricingTierCard({ label, duration, price, note, includes, whatsappMessage, badge }: PricingTierCardProps) {
   return (
     <Card className="h-full hover:-translate-y-1 hover:border-cyan-400/25">
@@ -22,13 +27,17 @@ export function PricingTierCard({ label, duration, price, note, includes, whatsa
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-3">
             <Badge>{label}</Badge>
-            {badge ? <Badge className="px-2 py-0.5 text-[10px]">{badge}</Badge> : null}
+            {badge ? (
+              <Badge className={cn("px-2 py-0.5 text-[10px] font-extrabold", isAttentionBadge(badge) && "vibrate-1")}>
+                {badge}
+              </Badge>
+            ) : null}
           </div>
           <div>
-            <h3 className="text-2xl font-semibold text-[color:var(--text)]">{price}</h3>
+            <h3 className="text-2xl font-extrabold text-[color:var(--text)]">{price}</h3>
             <p className="mt-1 text-sm text-[color:var(--muted)]">{duration}</p>
           </div>
-          <p className="text-sm font-medium text-[color:var(--accent-strong)]">{note}</p>
+          <p className="text-sm font-bold text-[color:var(--accent-strong)]">{note}</p>
         </div>
         <ul className="space-y-3 text-sm text-[color:var(--muted-strong)]">
           {includes.map((item) => (
