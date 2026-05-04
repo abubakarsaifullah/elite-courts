@@ -11,6 +11,7 @@ export type PackageType = "court" | "bundle" | "bowling-machine" | "indoor-sport
 
 export interface SitePackage {
   id: string;
+  visible?: boolean;
   sport: PackageSport;
   packageType: PackageType;
   title: string;
@@ -48,6 +49,7 @@ function saveLabel(originalPrice: number, discountedPrice: number) {
 export const packages = [
   {
     id: "padel-weekday-1-hour",
+    visible: true,
     sport: "Padel",
     packageType: "court",
     title: "Weekday Padel",
@@ -57,13 +59,14 @@ export const packages = [
     discountedPrice: PACKAGE_PRICES.padelWeekdayOneHour,
     priceSuffix: " / hour",
     duration: "1 hour",
-    availability: "Monday to Thursday, 12 PM - 5 AM",
+    availability: "Monday to Thursday, 3 PM - 5 AM",
     badge: "Weekday",
     features: ["Carbon fiber rackets included", "Free balls provided", "GoPro recording access", "Access to all board games"],
     whatsappMessage: "I'm looking to book a Weekday Padel session at Elite Courts.",
   },
   {
     id: "padel-weekend-1-hour",
+    visible: true,
     sport: "Padel",
     packageType: "court",
     title: "Weekend Padel",
@@ -81,6 +84,7 @@ export const packages = [
   },
   {
     id: "padel-2-hour-weekday",
+    visible: false,
     sport: "Padel",
     packageType: "bundle",
     title: "2 Hours Weekday Padel",
@@ -99,6 +103,7 @@ export const packages = [
   },
   {
     id: "padel-2-hour-weekend",
+    visible: false,
     sport: "Padel",
     packageType: "bundle",
     title: "2 Hours Weekend Padel",
@@ -115,6 +120,7 @@ export const packages = [
   },
   {
     id: "padel-3-hour-weekday",
+    visible: false,
     sport: "Padel",
     packageType: "bundle",
     title: "3 Hours Weekday Padel",
@@ -133,6 +139,7 @@ export const packages = [
   },
   {
     id: "padel-3-hour-weekend",
+    visible: false,
     sport: "Padel",
     packageType: "bundle",
     title: "3 Hours Weekend Padel",
@@ -151,6 +158,7 @@ export const packages = [
   },
   {
     id: "pickleball-weekday-1-hour",
+    visible: true,
     sport: "Pickleball",
     packageType: "court",
     title: "Weekday Pickleball",
@@ -160,20 +168,21 @@ export const packages = [
     discountedPrice: PACKAGE_PRICES.pickleballOneHour,
     priceSuffix: " / hour",
     duration: "1 hour",
-    availability: "Monday to Thursday, 12 PM - 5 AM",
+    availability: "Monday to Thursday, 3 PM - 5 AM",
     badge: "Weekday",
     features: ["Premium rackets included", "Free balls provided", "GoPro recording access", "Access to all board games"],
     whatsappMessage: "I'm looking to book a Weekday Pickleball slot at Elite Courts.",
   },
   {
     id: "pickleball-weekend-1-hour",
+    visible: true,
     sport: "Pickleball",
     packageType: "court",
     title: "Weekend Pickleball",
     subtitle: "Friday to Sunday",
     description: "A one-hour pickleball slot at the same flat rate on weekends.",
     currency: PACKAGE_CURRENCY,
-    discountedPrice: PACKAGE_PRICES.pickleballOneHour,
+    discountedPrice: PACKAGE_PRICES.pickleballOneHourWeekend,
     priceSuffix: " / hour",
     duration: "1 hour",
     availability: "Friday to Sunday, prime-time slots",
@@ -184,6 +193,7 @@ export const packages = [
   },
   {
     id: "pickleball-1-hour-all-week",
+    visible: false,
     sport: "Pickleball",
     packageType: "bundle",
     title: "1 Hour Pickleball",
@@ -200,6 +210,7 @@ export const packages = [
   },
   {
     id: "pickleball-2-hours-all-week",
+    visible: false,
     sport: "Pickleball",
     packageType: "bundle",
     title: "2 Hours Pickleball",
@@ -219,6 +230,7 @@ export const packages = [
   },
   {
     id: "pickleball-3-hours-all-week",
+    visible: false,
     sport: "Pickleball",
     packageType: "bundle",
     title: "3 Hours Pickleball",
@@ -238,6 +250,7 @@ export const packages = [
   },
   {
     id: "cricket-weekday-5-overs",
+    visible: true,
     sport: "Cricket",
     packageType: "bowling-machine",
     title: "5 Overs Weekday Cricket",
@@ -253,6 +266,7 @@ export const packages = [
   },
   {
     id: "cricket-weekday-10-overs",
+    visible: true,
     sport: "Cricket",
     packageType: "bowling-machine",
     title: "10 Overs Weekday Cricket",
@@ -268,6 +282,7 @@ export const packages = [
   },
   {
     id: "cricket-weekday-20-overs",
+    visible: true,
     sport: "Cricket",
     packageType: "bowling-machine",
     title: "20 Overs Weekday Cricket",
@@ -284,6 +299,7 @@ export const packages = [
   },
   {
     id: "cricket-weekend-5-overs",
+    visible: true,
     sport: "Cricket",
     packageType: "bowling-machine",
     title: "5 Overs Weekend Cricket",
@@ -299,6 +315,7 @@ export const packages = [
   },
   {
     id: "cricket-weekend-10-overs",
+    visible: true,
     sport: "Cricket",
     packageType: "bowling-machine",
     title: "10 Overs Weekend Cricket",
@@ -314,6 +331,7 @@ export const packages = [
   },
   {
     id: "cricket-weekend-20-overs",
+    visible: true,
     sport: "Cricket",
     packageType: "bowling-machine",
     title: "20 Overs Weekend Cricket",
@@ -330,6 +348,7 @@ export const packages = [
   },
   {
     id: "table-tennis-singles-30-minutes",
+    visible: true,
     sport: "Table Tennis",
     packageType: "indoor-sport",
     title: "Singles Table Tennis",
@@ -344,6 +363,7 @@ export const packages = [
   },
   {
     id: "table-tennis-singles-60-minutes",
+    visible: true,
     sport: "Table Tennis",
     packageType: "indoor-sport",
     title: "Singles Table Tennis",
@@ -360,6 +380,7 @@ export const packages = [
   },
   {
     id: "table-tennis-doubles-30-minutes",
+    visible: true,
     sport: "Table Tennis",
     packageType: "indoor-sport",
     title: "Doubles Table Tennis",
@@ -374,6 +395,7 @@ export const packages = [
   },
   {
     id: "table-tennis-doubles-60-minutes",
+    visible: true,
     sport: "Table Tennis",
     packageType: "indoor-sport",
     title: "Doubles Table Tennis",
@@ -390,6 +412,7 @@ export const packages = [
   },
   {
     id: "badminton-court-rental-60-minutes",
+    visible: true,
     sport: "Badminton",
     packageType: "indoor-sport",
     title: "Badminton Court Rental",
@@ -406,6 +429,7 @@ export const packages = [
   },
   {
     id: "membership-cricket-5-overs-daily",
+    visible: true,
     sport: "Membership",
     packageType: "monthly-membership",
     title: "Cricket Academy - 5 Overs Daily",
@@ -420,6 +444,7 @@ export const packages = [
   },
   {
     id: "membership-cricket-10-overs-daily",
+    visible: true,
     sport: "Membership",
     packageType: "monthly-membership",
     title: "Cricket Academy - 10 Overs Daily",
@@ -434,6 +459,7 @@ export const packages = [
   },
   {
     id: "membership-cricket-15-overs-daily",
+    visible: true,
     sport: "Membership",
     packageType: "monthly-membership",
     title: "Cricket Academy - 15 Overs Daily",
@@ -448,6 +474,7 @@ export const packages = [
   },
   {
     id: "membership-cricket-20-overs-daily",
+    visible: true,
     sport: "Membership",
     packageType: "monthly-membership",
     title: "Cricket Academy - 20 Overs Daily",
@@ -464,6 +491,7 @@ export const packages = [
   },
   {
     id: "membership-padel-10-hours",
+    visible: true,
     sport: "Membership",
     packageType: "monthly-membership",
     title: "Padel Monthly - 10 Hours",
@@ -478,6 +506,7 @@ export const packages = [
   },
   {
     id: "membership-pickleball-12-hours",
+    visible: true,
     sport: "Membership",
     packageType: "monthly-membership",
     title: "Pickleball Monthly - 12 Hours",
@@ -592,7 +621,9 @@ export const quickPricingHighlights = [
 ] as const;
 
 const packageMap: ReadonlyMap<string, SitePackage> = new Map<string, SitePackage>(
-  packages.map((item): [string, SitePackage] => [item.id, item]),
+  packages
+    .filter((item) => item.visible === true)
+    .map((item): [string, SitePackage] => [item.id, item]),
 );
 
 export function formatMoney(amount: number, currency: SitePackage["currency"] = "Rs") {

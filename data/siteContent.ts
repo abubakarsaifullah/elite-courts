@@ -302,7 +302,7 @@ export const siteContent = {
         "Clear visibility across the court",
         "Consistent bounce for competitive play",
       ],
-      image: "/images/sports/padel.svg",
+      image: "/images/sports/elite_courts_padel_card.webp",
       bookingMessage: "I'm looking to book a Padel court at Elite Courts.",
     },
     {
@@ -317,7 +317,7 @@ export const siteContent = {
         "Non-slip playing surface",
         "Suitable for singles and doubles",
       ],
-      image: "/images/sports/pickleball.svg",
+      image: "/images/sports/elite_courts_pickleball_card.webp",
       bookingMessage: "I'm looking to book a Pickleball slot at Elite Courts.",
     },
     {
@@ -332,7 +332,7 @@ export const siteContent = {
         "Bowling machine with swing and spin options",
         "Adjustable speed up to 160 kph",
       ],
-      image: "/images/sports/cricket.svg",
+      image: "/images/sports/elite_courts_cricket_card.gif",
       bookingMessage: "I'm looking to book Cricket bowling machine practice at Elite Courts.",
     },
     {
@@ -342,7 +342,7 @@ export const siteContent = {
       summary:
         "Play indoor table tennis with proper lighting, quality rackets, and balls for focused practice or quick competitive games.",
       features: ["Indoor table tennis facility", "Proper lighting", "Quality rackets", "Quality balls"],
-      image: "/images/sports/table-tennis.svg",
+      image: "/images/sports/elite_courts_table_tennis_card.webp",
       bookingMessage: "I'm looking to book Table Tennis at Elite Courts.",
     },
     {
@@ -352,7 +352,7 @@ export const siteContent = {
       summary:
         "Book a standard-sized badminton court with premium lighting, quality rackets, and shuttles for comfortable play.",
       features: ["Standard-sized badminton court", "Premium lighting", "Quality rackets", "Quality shuttles"],
-      image: "/images/sports/badminton.svg",
+      image: "/images/sports/elite_courts_badminton_card.webp",
       bookingMessage: "I'm looking to book Badminton at Elite Courts.",
     },
   ],

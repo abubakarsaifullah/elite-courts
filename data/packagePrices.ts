@@ -23,6 +23,7 @@ export const PACKAGE_PRICES = {
 
   // Pickleball hourly and bundle rates
   pickleballOneHour: 1500,
+  pickleballOneHourWeekend: 2000,
   pickleballTwoHourOriginal: 3000,
   pickleballTwoHourDiscounted: 2750,
   pickleballThreeHourOriginal: 4500,
