@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { WhatsAppFloatingButton } from "@/components/whatsapp-floating-button";
 import { BackToTopButton } from "@/components/back-to-top-button";
+import { AnnouncementMarquee } from "@/components/announcement-marquee";
 import { buildMetadata } from "@/lib/metadata";
 import { siteContent } from "@/data/siteContent";
 import "./globals.css";
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <div className="relative isolate flex min-h-screen flex-col overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[44rem] bg-[radial-gradient(circle_at_top,rgba(6,182,212,0.12),transparent_34%)]" />
           <SiteHeader />
+          <AnnouncementMarquee />
           <main className="flex-1">{children}</main>
           <SiteFooter />
           <BackToTopButton />
