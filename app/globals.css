@@ -290,10 +290,17 @@ img {
   will-change: transform;
 }
 
-.announcement-marquee-shell:hover .announcement-marquee-track,
-.announcement-marquee-viewport:focus .announcement-marquee-track,
-.announcement-marquee-viewport:focus-visible .announcement-marquee-track {
+/* Click/tap pause: pauses for a fixed time from React, then resumes automatically */
+.announcement-marquee-click-paused .announcement-marquee-track {
   animation-play-state: paused;
+}
+
+/* Keep the existing desktop hover behavior only on real hover devices */
+@media (hover: hover) and (pointer: fine) {
+  .announcement-marquee-shell:hover .announcement-marquee-track,
+  .announcement-marquee-viewport:focus-visible .announcement-marquee-track {
+    animation-play-state: paused;
+  }
 }
 
 .announcement-marquee-item {
