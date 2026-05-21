@@ -6,7 +6,8 @@ import { formatMoney, packages, type SitePackage } from "./packages";
 export const announcements = {
   enabled: true,
   label: "Special Offer",
-  maxPackageMessages: 10,
+  maxPackageMessages: 12,
+  showNewPackages: true,
   showDiscountedPackages: true,
   showPopularPackages: true,
   fallbackItems: [
@@ -21,6 +22,7 @@ function hasDiscount(item: SitePackage) {
 }
 
 function getBadgePrefix(item: SitePackage) {
+  if (item.badge === "New") return "New: ";
   if (item.badge === "Best Value") return "Best Value: ";
   if (item.badge === "Popular") return "Popular: ";
   if (item.isRecommended) return "Recommended: ";
@@ -45,18 +47,26 @@ function uniqueItems(items: readonly string[]) {
 }
 
 export function getAnnouncementItems() {
+  const typedPackages = packages as readonly SitePackage[];
+
   const discountMessages = announcements.showDiscountedPackages
-    ? packages.filter(hasDiscount).map(getDiscountMessage)
+    ? typedPackages.filter(hasDiscount).map(getDiscountMessage)
     : [];
 
   const popularMessages = announcements.showPopularPackages
-    ? packages
-        .filter((item) => item.visible !== false)
+    ? typedPackages
+        .filter((item) => item.visible !== false && item.badge !== "New")
         .map(getPopularMessage)
         .filter((item): item is string => Boolean(item))
     : [];
 
-  const generatedItems = uniqueItems([...discountMessages, ...popularMessages]).slice(0, announcements.maxPackageMessages);
+  const newMessages = announcements.showNewPackages
+    ? typedPackages
+        .filter((item) => item.visible !== false && item.badge === "New")
+        .map((item) => `New: ${item.title} available for ${formatMoney(item.discountedPrice, item.currency)}${item.priceSuffix ?? ""}`)
+    : [];
+
+  const generatedItems = uniqueItems([...newMessages, ...discountMessages, ...popularMessages]).slice(0, announcements.maxPackageMessages);
 
   return generatedItems.length > 0 ? generatedItems : announcements.fallbackItems;
 }
