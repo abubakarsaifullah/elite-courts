@@ -24,7 +24,7 @@ export interface SitePackage {
   duration: string;
   availability?: string;
   promotionLabel?: string;
-  badge?: "Standard" | "Popular" | "Recommended" | "Best Value" | "Weekday" | "Weekend";
+  badge?: "Standard" | "Popular" | "Recommended" | "Best Value" | "Weekday" | "Weekend" | "New";
   isPopular?: boolean;
   isRecommended?: boolean;
   features: readonly string[];
@@ -64,6 +64,9 @@ export const packages = [
     features: ["Carbon fiber rackets included", "Free balls provided", "GoPro recording access", "Access to all board games"],
     whatsappMessage: "I'm looking to book a Weekday Padel session at Elite Courts.",
   },
+
+  /** Padel Packages **/
+  
   {
     id: "padel-weekend-1-hour",
     visible: true,
@@ -156,6 +159,9 @@ export const packages = [
     features: ["Carbon fiber rackets included", "Free balls provided", "GoPro recording access", "Full facility access"],
     whatsappMessage: "I'm interested in the 3 Hours Weekend Padel bundle at Elite Courts.",
   },
+
+  /** Pickleball Packages **/
+
   {
     id: "pickleball-weekday-1-hour",
     visible: true,
@@ -248,6 +254,9 @@ export const packages = [
     terms: ["Flat rate applicable all week"],
     whatsappMessage: "I'm interested in the 3 Hours Pickleball bundle at Elite Courts.",
   },
+
+  /** Cricket Packages **/
+
   {
     id: "cricket-weekday-5-overs",
     visible: true,
@@ -347,6 +356,43 @@ export const packages = [
     whatsappMessage: "I'm looking to book the 20 Overs Weekend Cricket package at Elite Courts.",
   },
   {
+    id: "cricket-half-hour",
+    visible: true,
+    sport: "Cricket",
+    packageType: "bowling-machine",
+    title: "Half Hour Cricket",
+    subtitle: "Quick bowling machine session",
+    description: "A half-hour cricket practice session with the bowling machine.",
+    currency: PACKAGE_CURRENCY,
+    discountedPrice: PACKAGE_PRICES.cricketHalfHour,
+    duration: "30 minutes",
+    availability: "All week",
+    badge: "New",
+    //isRecommended: true,
+    features: ["Bowling machine access", "Speed gun", "Swing and spin options", "Adjustable speed up to 160 kph"],
+    whatsappMessage: "I'm looking to book the Half Hour Cricket package at Elite Courts.",
+  },
+  {
+    id: "cricket-one-hour",
+    visible: true,
+    sport: "Cricket",
+    packageType: "bowling-machine",
+    title: "One Hour Cricket",
+    subtitle: "Extended bowling machine session",
+    description: "A one-hour cricket practice session with the bowling machine.",
+    currency: PACKAGE_CURRENCY,
+    discountedPrice: PACKAGE_PRICES.cricketOneHour,
+    duration: "1 hour",
+    availability: "All week",
+    badge: "New",
+    //isRecommended: true,
+    features: ["Bowling machine access", "Speed gun", "Swing and spin options", "Adjustable speed up to 160 kph"],
+    whatsappMessage: "I'm looking to book the One Hour Cricket package at Elite Courts.",
+  },
+
+  /** Table Tennis Packages **/
+
+  {
     id: "table-tennis-singles-30-minutes",
     visible: true,
     sport: "Table Tennis",
@@ -410,6 +456,9 @@ export const packages = [
     features: ["High intensity indoor play", "4 rackets included", "Unlimited ball access"],
     whatsappMessage: "I'm looking to book Table Tennis Doubles for 60 minutes at Elite Courts.",
   },
+
+  /** Badminton Packages **/
+
   {
     id: "badminton-court-rental-60-minutes",
     visible: true,
@@ -427,6 +476,9 @@ export const packages = [
     features: ["Pre-booking required", "Professional rackets included", "Premium shuttles provided"],
     whatsappMessage: "I'm looking to book a Badminton Court Rental at Elite Courts.",
   },
+
+  /** Membership Packages **/
+
   {
     id: "membership-cricket-5-overs-daily",
     visible: true,
@@ -570,6 +622,8 @@ export const packageSections = [
       "cricket-weekend-5-overs",
       "cricket-weekend-10-overs",
       "cricket-weekend-20-overs",
+      "cricket-half-hour",
+      "cricket-one-hour",
     ],
   },
   {

@@ -156,7 +156,7 @@ export default function HomePage() {
       </section>
 
 
-      <TestimonialsSection />
+      {siteConfig.showCustomerReviews && <TestimonialsSection />}
 
       <section className="py-16 sm:py-20">
         <Container className="space-y-10">
