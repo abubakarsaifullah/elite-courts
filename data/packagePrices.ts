@@ -36,6 +36,8 @@ export const PACKAGE_PRICES = {
   cricketFiveOversWeekend: 450,
   cricketTenOversWeekend: 850,
   cricketTwentyOversWeekend: 1650,
+  cricketHalfHour: 1500,
+  cricketOneHour: 2500,
 
   // Table tennis rates
   tableTennisSinglesThirtyMinutes: 400,

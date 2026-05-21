@@ -13,6 +13,7 @@ export const siteContent = {
     locationSummary:
       "Elite Courts brings padel, pickleball, cricket practice, badminton, table tennis, and useful player amenities together at one easy-to-access facility on Main Canal Road, Lahore.",
     primaryWhatsappMessage: "I'm looking to book a court at Elite Courts.",
+    showCustomerReviews: false,
   },
 
   navigation: [
