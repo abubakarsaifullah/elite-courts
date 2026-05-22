@@ -10,12 +10,13 @@ import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { SportCard } from "@/components/sport-card";
 import { CtaBanner } from "@/components/cta-banner";
+import { NewPackagesSection } from "@/components/home/new-packages-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { JsonLd } from "@/components/seo/json-ld";
 import { pageContent, reasonsToChoose, siteConfig, sports } from "@/data/siteContent";
-import { featuredHomePackages, memberships, packagePriceRange, packages, quickPricingHighlights } from "@/data/packages";
+import { featuredHomePackages, memberships, packagePriceRange, quickPricingHighlights, visiblePackages } from "@/data/packages";
 
 const schema = {
   "@context": "https://schema.org",
@@ -34,7 +35,7 @@ const schema = {
   },
   areaServed: "Lahore",
   sameAs: siteConfig.socialLinks.map((item) => item.href),
-  makesOffer: packages.slice(0, 12).map((item) => ({
+  makesOffer: visiblePackages.slice(0, 12).map((item) => ({
     "@type": "Offer",
     name: item.title,
     price: item.discountedPrice,
@@ -50,6 +51,7 @@ export default function HomePage() {
     <>
       <JsonLd data={schema} />
       <HeroSlider />
+      <NewPackagesSection />
 
       <section className="py-16 sm:py-20">
         <Container className="space-y-10">
@@ -57,6 +59,7 @@ export default function HomePage() {
             eyebrow={home.sports.eyebrow}
             title={home.sports.title}
             description={home.sports.description}
+            maxWidth="wide"
             actions={
               <Button asChild variant="secondary">
                 <Link href="/sports">
@@ -78,7 +81,7 @@ export default function HomePage() {
 
       <section className="border-y border-[color:var(--border)] bg-[color:var(--surface-soft)] py-16 sm:py-20">
         <Container className="space-y-10">
-          <SectionHeading eyebrow={home.why.eyebrow} title={home.why.title} description={home.why.description} />
+          <SectionHeading eyebrow={home.why.eyebrow} title={home.why.title} description={home.why.description} maxWidth="wide" />
           <div className="grid gap-6 lg:grid-cols-3">
             {reasonsToChoose.map((reason, index) => {
               const icons = [ShieldCheck, Users, Star] as const;
@@ -160,14 +163,14 @@ export default function HomePage() {
 
       <section className="py-16 sm:py-20">
         <Container className="space-y-10">
-          <SectionHeading eyebrow={home.amenities.eyebrow} title={home.amenities.title} description={home.amenities.description} />
+          <SectionHeading eyebrow={home.amenities.eyebrow} title={home.amenities.title} description={home.amenities.description} maxWidth="wide" />
           <AmenitiesGrid />
         </Container>
       </section>
 
       <section className="border-y border-[color:var(--border)] bg-[color:var(--surface-soft)] py-16 sm:py-20">
         <Container className="space-y-10">
-          <SectionHeading eyebrow={home.location.eyebrow} title={home.location.title} description={home.location.description} />
+          <SectionHeading eyebrow={home.location.eyebrow} title={home.location.title} description={home.location.description} maxWidth="wide" />
           <LocationPreview />
         </Container>
       </section>

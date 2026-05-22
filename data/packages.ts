@@ -9,6 +9,8 @@ import { PACKAGE_CURRENCY, PACKAGE_PRICES } from "./packagePrices";
 export type PackageSport = "Padel" | "Pickleball" | "Cricket" | "Table Tennis" | "Badminton" | "Membership";
 export type PackageType = "court" | "bundle" | "bowling-machine" | "indoor-sport" | "monthly-membership";
 
+export const NEW_PACKAGE_BADGE_LABEL = "Just Added" as const;
+
 export interface SitePackage {
   id: string;
   visible?: boolean;
@@ -672,10 +674,10 @@ export const quickPricingHighlights = [
   `Badminton is ${formatMoney(PACKAGE_PRICES.badmintonCourtSixtyMinutes)} for a 60-minute court rental session.`,
 ] as const;
 
+export const visiblePackages = (packages as readonly SitePackage[]).filter((item) => item.visible !== false);
+
 const packageMap: ReadonlyMap<string, SitePackage> = new Map<string, SitePackage>(
-  packages
-    .filter((item) => item.visible === true)
-    .map((item): [string, SitePackage] => [item.id, item]),
+  visiblePackages.map((item): [string, SitePackage] => [item.id, item]),
 );
 
 export function formatMoney(amount: number, currency: SitePackage["currency"] = "Rs") {
@@ -695,8 +697,30 @@ export function getPackageSavings(item: SitePackage) {
   return item.originalPrice - item.discountedPrice;
 }
 
+export function isVisiblePackage(item: SitePackage) {
+  return item.visible !== false;
+}
+
+export function isNewPackage(item: SitePackage) {
+  return isVisiblePackage(item) && item.badge === "New";
+}
+
+export function getPackageBadgeLabel(item: SitePackage) {
+  if (item.badge === "New") return NEW_PACKAGE_BADGE_LABEL;
+  if (item.badge) return item.badge;
+  if (item.isRecommended) return "Recommended";
+  if (item.isPopular) return "Popular";
+  return undefined;
+}
+
+export const newPackages = visiblePackages.filter(isNewPackage);
+
+export function getNewPackages(limit = 4) {
+  return newPackages.slice(0, limit);
+}
+
 export const packagePriceRange = (() => {
-  const values = packages.map((item) => item.discountedPrice);
+  const values = visiblePackages.map((item) => item.discountedPrice);
   const min = Math.min(...values);
   const max = Math.max(...values);
   return `${formatMoney(min)} - ${formatMoney(max)}`;

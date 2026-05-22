@@ -21,7 +21,7 @@ export default function VideosPage() {
 
       <section className="py-16 sm:py-20">
         <Container className="space-y-10">
-          <SectionHeading eyebrow={page.section.eyebrow} title={page.section.title} description={page.section.description} />
+          <SectionHeading eyebrow={page.section.eyebrow} title={page.section.title} description={page.section.description} maxWidth="wide" />
           <VideoGrid videos={videos} />
         </Container>
       </section>

@@ -67,9 +67,9 @@ export const sliderImages: readonly SliderImage[] = [
     objectPosition: "center",
     quality: 95,
   },
-   {
+  {
     id: "pickleball-court",
-    src: "/images/slider/pickleball-court.JPG",
+    src: "/images/slider/pickleball-court.webp",
     alt: "Racket sports court space at Elite Courts Lahore",
     label: "Pickleball Sports",
     caption: "Pickleball, badminton, table tennis, and court sessions in one facility.",
@@ -78,12 +78,11 @@ export const sliderImages: readonly SliderImage[] = [
   },
   {
     id: "padels",
-    src: "/images/slider/padels-on-ground.JPG",
+    src: "/images/slider/padels-on-ground.webp",
     alt: "Elite Courts padel court and player area in Lahore",
     label: "Padel",
     caption: "Premium padel courts for quick games, practice, and competitive rallies.",
     objectPosition: "center",
     quality: 95,
-    priority: true,
   },
 ];

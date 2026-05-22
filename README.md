@@ -78,6 +78,29 @@ To add a new package:
 
 To remove a package, delete the package object and remove its `id` from `packageSections`.
 
+## Announcement marquee and new packages
+
+The announcement marquee appears below the header on every page. Its fallback text and behavior are managed in:
+
+```txt
+data/announcements.ts
+```
+
+The marquee automatically reads visible packages from `data/packages.ts` and can show short messages for:
+
+- Newly added packages marked with `badge: "New"`
+- Discounted packages with an original price and discounted price
+- Popular, Best Value, and Recommended packages
+
+New package cards are also highlighted on the homepage automatically. To mark a package as newly added, set this in the package object:
+
+```ts
+badge: "New"
+```
+
+The public label displays as **Just Added** so it feels more polished for customers while keeping the package data simple.
+
+
 ## Homepage slider images
 
 Optimized slider images are stored in:
@@ -101,7 +124,7 @@ Recommended slider image guidelines:
 - Keep each image optimized, ideally below 500 KB to 800 KB
 - Use real, clear, high-quality Elite Courts sports or facility photos
 
-The uploaded high-resolution source images were optimized into WebP files used by the live slider. Large original files are kept outside `public/` in `media-source/slider-originals/` so they are not deployed as live website assets.
+High-resolution source images should be optimized into WebP files for the live slider. Large original files can be kept outside `public/` in `media-source/slider-originals/` so they are not deployed as live website assets.
 
 ## Highlights / videos page
 

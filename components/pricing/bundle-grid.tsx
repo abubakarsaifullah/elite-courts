@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { PackageStatusBadge } from "@/components/pricing/package-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { buildWhatsAppUrl } from "@/data/siteContent";
@@ -22,10 +22,6 @@ interface PickleballBundle {
   savings: string | null;
 }
 
-function isAttentionBadge(label: string | undefined) {
-  return label === "Popular" || label === "Best Value" || label === "Recommended";
-}
-
 export function PadelBundleGrid({ bundles }: { bundles: readonly PadelBundle[] }) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -43,7 +39,7 @@ export function PadelBundleGrid({ bundles }: { bundles: readonly PadelBundle[] }
                 <p className="text-lg font-semibold text-[color:var(--text)]">{bundle.label}</p>
                 <p className="mt-1 text-sm text-[color:var(--muted)]">Multi-hour bundle</p>
               </div>
-              <Badge className={cn("font-extrabold", isAttentionBadge(bundle.badge) && "vibrate-1")}>{bundle.badge}</Badge>
+              <PackageStatusBadge label={bundle.badge} className="font-extrabold" />
             </div>
 
             <div className="grid gap-3 rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
@@ -102,7 +98,7 @@ export function PickleballBundleGrid({ bundles }: { bundles: readonly Pickleball
                 <p className="text-lg font-semibold text-[color:var(--text)]">{bundle.label}</p>
                 <p className="mt-1 text-sm text-[color:var(--muted)]">Flat rate all week</p>
               </div>
-              <Badge className={cn("font-extrabold", isAttentionBadge(bundle.badge) && "vibrate-1")}>{bundle.badge}</Badge>
+              <PackageStatusBadge label={bundle.badge} className="font-extrabold" />
             </div>
 
             <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
