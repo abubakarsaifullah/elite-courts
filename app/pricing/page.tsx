@@ -24,7 +24,7 @@ export default function PricingPage() {
 
       <section className="py-14 sm:py-16">
         <Container className="space-y-7">
-          <SectionHeading eyebrow={page.intro.eyebrow} title={page.intro.title} description={page.intro.description} />
+          <SectionHeading eyebrow={page.intro.eyebrow} title={page.intro.title} description={page.intro.description} maxWidth="wide" />
           <div className="flex flex-wrap gap-2">
             {packageSections.map((section) => (
               <Link
@@ -51,7 +51,7 @@ export default function PricingPage() {
             className={muted ? "scroll-mt-24 border-y border-[color:var(--border)] bg-[color:var(--surface-soft)] py-16 sm:py-20" : "scroll-mt-24 py-16 sm:py-20"}
           >
             <Container className="space-y-8">
-              <SectionHeading eyebrow={section.eyebrow} title={section.title} description={section.description} />
+              <SectionHeading eyebrow={section.eyebrow} title={section.title} description={section.description} maxWidth="wide" />
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {items.map((item) => (
                   <PricingPackageCard key={item.id} item={item} />

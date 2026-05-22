@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Check, MessageCircle, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { isNewPackageBadge, PackageStatusBadge } from "@/components/pricing/package-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { buildWhatsAppUrl } from "@/data/siteContent";
-import { formatOriginalPrice, formatPackagePrice, getPackageSavings, type SitePackage } from "@/data/packages";
+import { formatOriginalPrice, formatPackagePrice, getPackageBadgeLabel, getPackageSavings, type SitePackage } from "@/data/packages";
 import { cn } from "@/lib/utils";
 
 interface PricingPackageCardProps {
@@ -12,44 +13,32 @@ interface PricingPackageCardProps {
   compact?: boolean;
 }
 
-function getBadgeLabel(item: SitePackage) {
-  if (item.isRecommended) return "Recommended";
-  if (item.isPopular) return "Popular";
-  return item.badge;
-}
-
-function isAttentionBadge(label: string | undefined) {
-  return label === "Popular" || label === "Best Value" || label === "Recommended";
-}
 
 export function PricingPackageCard({ item, compact = false }: PricingPackageCardProps) {
   const original = formatOriginalPrice(item);
   const savings = getPackageSavings(item);
-  const badge = getBadgeLabel(item);
+  const badge = getPackageBadgeLabel(item);
   const features = compact ? item.features.slice(0, 3) : item.features;
+  const isNew = isNewPackageBadge(badge);
 
   return (
     <Card
       className={cn(
         "group h-full overflow-hidden hover:-translate-y-1 hover:border-cyan-400/30 hover:shadow-[0_28px_90px_-45px_rgba(6,182,212,0.36)]",
         item.isRecommended && "border-cyan-400/45 shadow-[0_28px_90px_-44px_rgba(6,182,212,0.3)]",
+        isNew && "border-emerald-400/35 shadow-[0_28px_90px_-48px_rgba(16,185,129,0.34)]",
       )}
     >
-      {item.isRecommended ? <div className="h-1.5 bg-[color:var(--accent)]" /> : null}
+      {isNew ? (
+        <div className="h-1.5 bg-gradient-to-r from-emerald-400 via-cyan-300 to-emerald-400" />
+      ) : item.isRecommended ? (
+        <div className="h-1.5 bg-[color:var(--accent)]" />
+      ) : null}
       <CardContent className="flex h-full flex-col gap-6">
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <Badge>{item.sport}</Badge>
-            {badge ? (
-              <Badge
-                className={cn(
-                  "border-cyan-400/30 bg-[color:var(--surface-strong)] px-2 py-0.5 text-[10px] font-extrabold",
-                  isAttentionBadge(badge) && "vibrate-1 border-cyan-300/55 bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]",
-                )}
-              >
-                {badge}
-              </Badge>
-            ) : null}
+            <PackageStatusBadge label={badge} className="border-cyan-400/30 bg-[color:var(--surface-strong)]" />
           </div>
 
           <div className="space-y-2">
@@ -70,7 +59,7 @@ export function PricingPackageCard({ item, compact = false }: PricingPackageCard
 
           {item.promotionLabel || savings ? (
             <div className="vibrate-1 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-[color:var(--accent-soft)] px-3 py-1.5 text-xs font-extrabold text-[color:var(--accent-strong)]">
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               {item.promotionLabel || `Save ${item.currency} ${savings?.toLocaleString("en-PK")}`}
             </div>
           ) : null}
@@ -82,7 +71,7 @@ export function PricingPackageCard({ item, compact = false }: PricingPackageCard
           {features.map((feature) => (
             <li key={feature} className="flex items-start gap-3">
               <span className="mt-0.5 rounded-full bg-[color:var(--accent-soft)] p-1 text-[color:var(--accent-strong)]">
-                <Check className="h-3.5 w-3.5" />
+                <Check className="h-3.5 w-3.5" aria-hidden="true" />
               </span>
               <span>{feature}</span>
             </li>
@@ -100,7 +89,7 @@ export function PricingPackageCard({ item, compact = false }: PricingPackageCard
         <div className="mt-auto pt-1">
           <Button asChild className="w-full">
             <Link href={buildWhatsAppUrl(item.whatsappMessage)} target="_blank" rel="noreferrer">
-              <MessageCircle className="h-4 w-4" />
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
               Book now
             </Link>
           </Button>

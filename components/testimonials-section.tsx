@@ -53,6 +53,7 @@ export async function TestimonialsSection() {
           eyebrow={testimonialsContent.eyebrow}
           title={testimonialsContent.title}
           description={testimonialsContent.description}
+          maxWidth="wide"
           actions={
             summary.googleMapsUri ? (
               <Button asChild variant="secondary">

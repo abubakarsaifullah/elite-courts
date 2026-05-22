@@ -72,7 +72,6 @@ export async function sendContactEmail(payload: ContactFormValues) {
       throw new Error("Email service is not configured.");
     }
 
-    console.info("[contact-form] Email service not configured. Payload follows:", payload);
     return;
   }
 

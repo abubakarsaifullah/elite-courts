@@ -21,7 +21,7 @@ export default function SportsPage() {
 
       <section className="py-16 sm:py-20">
         <Container className="space-y-10">
-          <SectionHeading eyebrow={page.section.eyebrow} title={page.section.title} description={page.section.description} />
+          <SectionHeading eyebrow={page.section.eyebrow} title={page.section.title} description={page.section.description} maxWidth="wide" />
           <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
             {sports.map((sport) => (
               <SportCard key={sport.slug} sport={sport} />

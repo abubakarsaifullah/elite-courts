@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { PackageStatusBadge } from "@/components/pricing/package-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { buildWhatsAppUrl } from "@/data/siteContent";
-import { cn } from "@/lib/utils";
 
 interface RateItem {
   label: string;
@@ -19,10 +18,6 @@ interface CompactPricingGridProps {
   whatsappMessage: string;
 }
 
-function isAttentionBadge(label: string | undefined) {
-  return label === "Popular" || label === "Best Value" || label === "Recommended";
-}
-
 export function CompactPricingGrid({ title, subtitle, rates, includes, whatsappMessage }: CompactPricingGridProps) {
   return (
     <Card className="h-full hover:-translate-y-1 hover:border-cyan-400/25">
@@ -36,11 +31,7 @@ export function CompactPricingGrid({ title, subtitle, rates, includes, whatsappM
             <div key={item.label} className="flex items-center justify-between gap-3 border-b border-[color:var(--border)] py-2 last:border-b-0">
               <div className="flex items-center gap-3">
                 <span className="text-sm text-[color:var(--muted-strong)]">{item.label}</span>
-                {item.badge ? (
-                  <Badge className={cn("px-2 py-0.5 text-[10px] font-extrabold", isAttentionBadge(item.badge) && "vibrate-1")}>
-                    {item.badge}
-                  </Badge>
-                ) : null}
+                <PackageStatusBadge label={item.badge} />
               </div>
               <span className="text-sm font-extrabold text-[color:var(--text)]">{item.price}</span>
             </div>

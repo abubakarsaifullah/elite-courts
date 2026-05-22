@@ -168,6 +168,62 @@ img {
   }
 }
 
+.package-badge-new {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(52, 211, 153, 0.64) !important;
+  background: linear-gradient(135deg, rgba(209, 250, 229, 0.96), rgba(103, 232, 249, 0.76)) !important;
+  color: #064e3b !important;
+  box-shadow: 0 12px 34px -24px rgba(16, 185, 129, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.42) inset;
+  animation: new-package-badge-pulse 3.4s ease-in-out infinite;
+}
+
+:root[data-theme="dark"] .package-badge-new {
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.92), rgba(8, 145, 178, 0.84)) !important;
+  color: #d1fae5 !important;
+  box-shadow: 0 14px 38px -24px rgba(45, 212, 191, 0.95), 0 0 0 1px rgba(209, 250, 229, 0.14) inset;
+}
+
+.package-badge-new::after {
+  content: "";
+  position: absolute;
+  inset-block: -45%;
+  left: -65%;
+  z-index: 0;
+  pointer-events: none;
+  width: 46%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.68), transparent);
+  animation: new-package-badge-shine 3.8s ease-in-out infinite;
+}
+
+@keyframes new-package-badge-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.035);
+  }
+}
+
+@keyframes new-package-badge-shine {
+  0%,
+  52% {
+    transform: translateX(0) rotate(18deg);
+    opacity: 0;
+  }
+  64% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translateX(430%) rotate(18deg);
+    opacity: 0;
+  }
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -182,11 +238,14 @@ img {
     transition-duration: 0.01ms !important;
   }
 
-  .vibrate-1 {
+  .vibrate-1,
+  .package-badge-new,
+  .package-badge-new::after {
     -webkit-animation: none !important;
     animation: none !important;
   }
 }
+
 
 .ready-to-play-card::before {
   content: "";
@@ -249,13 +308,21 @@ img {
   position: relative;
   z-index: 40;
   background:
-    linear-gradient(90deg, rgba(6, 182, 212, 0.08), rgba(16, 185, 129, 0.05), rgba(6, 182, 212, 0.08)),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.1), rgba(16, 185, 129, 0.06), rgba(6, 182, 212, 0.1)),
     var(--bg);
 }
 
 .announcement-marquee-shell {
   position: relative;
   overflow: hidden;
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .announcement-marquee-shell:hover {
+    border-color: rgba(34, 211, 238, 0.32);
+    box-shadow: 0 22px 70px -42px rgba(6, 182, 212, 0.82);
+  }
 }
 
 .announcement-marquee-shell::before {
@@ -264,38 +331,38 @@ img {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 28%, rgba(34, 211, 238, 0.08));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 28%, rgba(34, 211, 238, 0.1));
   opacity: 0.72;
 }
 
 .announcement-marquee-badge {
   position: relative;
   z-index: 1;
-  animation: announcement-badge-pulse 2.8s ease-in-out infinite;
+  animation: announcement-badge-pulse 3.2s ease-in-out infinite;
   transform-origin: center;
 }
 
 .announcement-marquee-viewport {
   position: relative;
   z-index: 1;
-  mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+  cursor: pointer;
+  mask-image: linear-gradient(90deg, transparent 0%, black 7%, black 93%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 7%, black 93%, transparent 100%);
 }
 
 .announcement-marquee-track {
   display: flex;
   width: max-content;
   align-items: center;
-  animation: announcement-marquee-scroll 60s linear infinite;
+  animation: announcement-marquee-scroll 64s linear infinite;
+  animation-play-state: running;
   will-change: transform;
 }
 
-/* Click/tap pause: pauses for a fixed time from React, then resumes automatically */
 .announcement-marquee-click-paused .announcement-marquee-track {
   animation-play-state: paused;
 }
 
-/* Keep the existing desktop hover behavior only on real hover devices */
 @media (hover: hover) and (pointer: fine) {
   .announcement-marquee-shell:hover .announcement-marquee-track,
   .announcement-marquee-viewport:focus-visible .announcement-marquee-track {
@@ -307,22 +374,58 @@ img {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 0.85rem;
-  padding-inline: 0.9rem;
+  gap: 0.72rem;
+  padding-inline: 0.82rem;
   color: var(--muted-strong);
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 780;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
 .announcement-marquee-dot {
-  height: 0.45rem;
-  width: 0.45rem;
+  height: 0.42rem;
+  width: 0.42rem;
   flex: 0 0 auto;
   border-radius: 9999px;
   background: var(--accent);
-  box-shadow: 0 0 0 0.28rem var(--accent-soft);
+  box-shadow: 0 0 0 0.25rem var(--accent-soft);
+}
+
+.announcement-marquee-label {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  padding: 0.18rem 0.5rem;
+  color: var(--accent-strong);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.announcement-marquee-item--new .announcement-marquee-label {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(34, 211, 238, 0.14));
+  color: #047857;
+  box-shadow: 0 10px 28px -22px rgba(16, 185, 129, 0.95);
+}
+
+:root[data-theme="dark"] .announcement-marquee-item--new .announcement-marquee-label {
+  color: #bbf7d0;
+}
+
+.announcement-marquee-item--recommended .announcement-marquee-label,
+.announcement-marquee-item--discount .announcement-marquee-label {
+  border-color: rgba(6, 182, 212, 0.38);
+  background: var(--accent-soft);
+}
+
+.announcement-marquee-item--popular .announcement-marquee-label {
+  border-color: rgba(14, 116, 144, 0.38);
 }
 
 @keyframes announcement-marquee-scroll {
@@ -341,32 +444,44 @@ img {
     box-shadow: 0 14px 34px -22px rgba(6, 182, 212, 0.95);
   }
   50% {
-    transform: scale(1.045);
-    box-shadow: 0 18px 42px -18px rgba(6, 182, 212, 1), 0 0 0 0.28rem rgba(34, 211, 238, 0.12);
+    transform: scale(1.035);
+    box-shadow: 0 18px 42px -18px rgba(6, 182, 212, 1), 0 0 0 0.26rem rgba(34, 211, 238, 0.12);
   }
 }
 
 @media (max-width: 640px) {
   .announcement-marquee-shell {
-    border-radius: 1.25rem;
+    border-radius: 1.2rem;
   }
 
   .announcement-marquee-badge {
-    padding-inline: 0.72rem;
-    letter-spacing: 0.1em;
+    padding-inline: 0.68rem;
+    letter-spacing: 0.08em;
   }
 
   .announcement-marquee-item {
-    gap: 0.72rem;
-    padding-inline: 0.72rem;
+    gap: 0.58rem;
+    padding-inline: 0.62rem;
     font-size: 0.78rem;
+  }
+
+  .announcement-marquee-label {
+    padding-inline: 0.42rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .package-badge-new,
+  .package-badge-new::after,
   .announcement-marquee-badge,
   .announcement-marquee-track {
     animation: none !important;
+  }
+
+  .package-badge-new::after {
+    display: none;
   }
 
   .announcement-marquee-track {

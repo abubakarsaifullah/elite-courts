@@ -79,6 +79,13 @@ export const siteContent = {
 
   pages: {
     home: {
+      newPackages: {
+        eyebrow: "Just added",
+        title: "New packages ready for your next visit.",
+        description:
+          "Fresh package options from the current Elite Courts price list are highlighted here so returning players can spot new booking choices quickly.",
+        actionLabel: "See all packages",
+      },
       sports: {
         eyebrow: "Sports offered",
         title: "Choose your game and get straight to the court.",
