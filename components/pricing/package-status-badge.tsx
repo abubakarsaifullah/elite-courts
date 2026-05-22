@@ -27,14 +27,17 @@ export function PackageStatusBadge({ label, className }: PackageStatusBadgeProps
 
   if (!displayLabel) return null;
 
+  const isAttentionBadge = isAttentionPackageBadge(displayLabel);
+  const isNewBadge = isNewPackageBadge(displayLabel);
+
   return (
     <Badge
       className={cn(
         "px-2 py-0.5 text-[10px] font-extrabold",
-        isAttentionPackageBadge(displayLabel) &&
-          "vibrate-1 border-cyan-300/55 bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]",
-        isNewPackageBadge(displayLabel) && "package-badge-new",
         className,
+        isAttentionBadge &&
+          "vibrate-1 border-cyan-300/55 bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]",
+        isNewBadge && "package-badge-new",
       )}
     >
       {displayLabel}
