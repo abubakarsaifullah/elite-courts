@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { JsonLd } from "@/components/seo/json-ld";
 import { pageContent, reasonsToChoose, siteConfig, sports } from "@/data/siteContent";
+import { businessHours, weekdayOrder } from "@/data/businessHours";
 import { featuredHomePackages, memberships, packagePriceRange, quickPricingHighlights, visiblePackages } from "@/data/packages";
 
 const schema = {
@@ -34,6 +35,15 @@ const schema = {
     addressCountry: "PK",
   },
   areaServed: "Lahore",
+  openingHoursSpecification: weekdayOrder.map((day) => {
+    const hours = businessHours.weeklyHours[day];
+    return {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: day.charAt(0).toUpperCase() + day.slice(1),
+      opens: hours.open,
+      closes: hours.close,
+    };
+  }),
   sameAs: siteConfig.socialLinks.map((item) => item.href),
   makesOffer: visiblePackages.slice(0, 12).map((item) => ({
     "@type": "Offer",

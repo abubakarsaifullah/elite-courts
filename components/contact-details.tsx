@@ -3,6 +3,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { buildWhatsAppUrl, siteConfig } from "@/data/siteContent";
+import { BusinessHoursCard } from "@/components/business-hours-card";
 
 const details = [
   {
@@ -51,6 +52,8 @@ export function ContactDetails() {
           </Card>
         );
       })}
+
+      <BusinessHoursCard compact />
 
       <Button asChild className="w-full">
         <Link href={buildWhatsAppUrl(siteConfig.primaryWhatsappMessage)} target="_blank" rel="noreferrer">
