@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { WhatsAppFloatingButton } from "@/components/whatsapp-floating-button";
 import { BackToTopButton } from "@/components/back-to-top-button";
 import { AnnouncementMarquee } from "@/components/announcement-marquee";
+import { BookingChatbot } from "@/components/chatbot/BookingChatbot";
 import { buildMetadata } from "@/lib/metadata";
 import { siteContent } from "@/data/siteContent";
 import "./globals.css";
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           <main className="flex-1">{children}</main>
           <SiteFooter />
           <BackToTopButton />
+          <BookingChatbot />
           <WhatsAppFloatingButton />
         </div>
       </body>
