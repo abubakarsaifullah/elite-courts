@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { CalendarCheck, ChevronDown, Loader2, MessageCircle, RotateCcw, Send, X } from "lucide-react";
-import { bookingDurations } from "@/data/bookingDurations";
+import { Bot, CalendarCheck, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Loader2, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import { businessHours } from "@/data/businessHours";
 import { chatbotConfig } from "@/data/bookingConfig";
+import { bookingLimits } from "@/data/bookingLimits";
 import { chatbotMessages } from "@/data/chatbotMessages";
-import { bookingSports } from "@/data/sports";
+import { getAllowedDurationsForSport, getBookingPriceEstimate } from "@/data/sportBookingConfig";
+import { getActiveBookingSports } from "@/data/sports";
+import { renderTemplate, whatsappTemplates } from "@/data/whatsappTemplates";
 import { buildWhatsAppUrl, siteConfig } from "@/data/siteContent";
 import { REGEX } from "@/lib/regex";
 import { cn } from "@/lib/utils";
@@ -22,6 +24,7 @@ type Mode =
   | "create-phone"
   | "create-date"
   | "create-slots"
+  | "create-confirm"
   | "view-phone"
   | "final";
 type ChatRole = "bot" | "user";
@@ -37,6 +40,7 @@ interface Slot {
   label: string;
   startIso: string;
   endIso: string;
+  priceLabel?: string;
 }
 
 interface BookingRecord {
@@ -51,8 +55,16 @@ interface BookingRecord {
   channel: string;
 }
 
+interface PriceEstimate {
+  amount: number | null;
+  currency: string;
+  label: string;
+  note?: string;
+}
+
 const INITIAL_SLOT_COUNT = chatbotConfig.initialVisibleSlots;
 const SESSION_TIMEOUT_MS = chatbotConfig.inactivityResetMinutes * 60 * 1000;
+const activeSports = getActiveBookingSports();
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -75,6 +87,47 @@ function addDays(dateString: string, days: number) {
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
+
+function dateInputToUtcDate(dateString: string) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function addMonths(monthDateString: string, months: number) {
+  const [year, month] = monthDateString.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1 + months, 1)).toISOString().slice(0, 10);
+}
+
+function getMonthEnd(monthDateString: string) {
+  const [year, month] = monthDateString.split("-").map(Number);
+  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
+}
+
+function monthHasAllowedDate(monthDateString: string, minDate: string, maxDate: string) {
+  return monthDateString <= maxDate && getMonthEnd(monthDateString) >= minDate;
+}
+
+function getCalendarDays(monthDateString: string, minDate: string, maxDate: string, selectedDate: string) {
+  const monthStart = dateInputToUtcDate(monthDateString);
+  const gridStart = new Date(monthStart.getTime());
+  gridStart.setUTCDate(monthStart.getUTCDate() - monthStart.getUTCDay());
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(gridStart.getTime());
+    date.setUTCDate(gridStart.getUTCDate() + index);
+    const value = date.toISOString().slice(0, 10);
+
+    return {
+      value,
+      day: date.getUTCDate(),
+      isCurrentMonth: date.getUTCMonth() === monthStart.getUTCMonth(),
+      isSelected: value === selectedDate,
+      isDisabled: value < minDate || value > maxDate,
+    };
+  });
+}
+
+const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function getBusinessWindowForDate(dateString: string) {
   const weekday = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][new Date(`${dateString}T00:00:00Z`).getUTCDay()] as keyof typeof businessHours.weeklyHours;
@@ -128,6 +181,16 @@ function maskPhone(phone: string) {
   return phone.length === 11 ? `${phone.slice(0, 4)}***${phone.slice(-3)}` : phone;
 }
 
+function notifyAdminPortalBookingCreated() {
+  try {
+    const channel = new BroadcastChannel("elite-courts-bookings");
+    channel.postMessage({ type: "booking-created", source: "chatbot", at: new Date().toISOString() });
+    channel.close();
+  } catch {
+    // BroadcastChannel is best-effort; admin polling is still the fallback.
+  }
+}
+
 export function BookingChatbot() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -137,11 +200,20 @@ export function BookingChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [visibleSlotCount, setVisibleSlotCount] = useState(INITIAL_SLOT_COUNT);
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [price, setPrice] = useState<PriceEstimate | null>(null);
   const [form, setForm] = useState({ sportId: "", durationId: "", clientName: "", phone: "", date: "" });
   const [viewForm, setViewForm] = useState({ phone: "" });
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const bookingWindow = useMemo(getBookingWindow, []);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => `${bookingWindow.min.slice(0, 7)}-01`);
+
+  const selectedSport = activeSports.find((sport) => sport.id === form.sportId);
+  const durationOptions = form.sportId ? getAllowedDurationsForSport(form.sportId) : [];
+  const selectedDuration = durationOptions.find((duration) => duration.id === form.durationId);
+  const localPrice = form.sportId && form.durationId ? getBookingPriceEstimate({ sportId: form.sportId, durationId: form.durationId, date: form.date }) : null;
 
   function addMessage(role: ChatRole, content: ReactNode) {
     setMessages((current) => [...current, { id: makeId(), role, content }]);
@@ -152,9 +224,12 @@ export function BookingChatbot() {
     setInputValue("");
     setIsLoading(false);
     setSlots([]);
+    setSelectedSlot(null);
+    setPrice(null);
     setVisibleSlotCount(INITIAL_SLOT_COUNT);
     setForm({ sportId: "", durationId: "", clientName: "", phone: "", date: "" });
     setViewForm({ phone: "" });
+    setIsDatePickerOpen(false);
     setMessages([
       ...(showTimeoutMessage ? [{ id: makeId(), role: "bot" as const, content: chatbotMessages.timeoutReset }] : []),
       { id: makeId(), role: "bot", content: chatbotMessages.greeting },
@@ -167,7 +242,10 @@ export function BookingChatbot() {
     setInputValue("");
     setIsLoading(false);
     setSlots([]);
+    setSelectedSlot(null);
+    setPrice(null);
     setVisibleSlotCount(INITIAL_SLOT_COUNT);
+    setIsDatePickerOpen(false);
     addMessage("bot", chatbotMessages.mainMenu);
   }
 
@@ -177,7 +255,7 @@ export function BookingChatbot() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, slots, visibleSlotCount, isLoading]);
+  }, [messages, slots, visibleSlotCount, isLoading, selectedSlot]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -222,6 +300,10 @@ export function BookingChatbot() {
       return;
     }
     if (value === "create") {
+      setForm({ sportId: "", durationId: "", clientName: "", phone: "", date: "" });
+      setSlots([]);
+      setSelectedSlot(null);
+      setPrice(null);
       addMessage("bot", chatbotMessages.createBooking);
       addMessage("bot", chatbotMessages.chooseSport);
       setMode("create-sport");
@@ -245,22 +327,44 @@ export function BookingChatbot() {
   }
 
   function handleSport(value: string, label: string) {
-    setForm((current) => ({ ...current, sportId: value }));
+    const durations = getAllowedDurationsForSport(value);
+    setForm((current) => ({ ...current, sportId: value, durationId: "" }));
+    setSlots([]);
+    setSelectedSlot(null);
+    setPrice(null);
     addMessage("user", label);
-    addMessage("bot", chatbotMessages.chooseDuration);
-    setMode("create-duration");
+    addMessage("bot", durations.length > 0 ? chatbotMessages.chooseDuration : "This sport is not available for online booking right now.");
+    setMode(durations.length > 0 ? "create-duration" : "menu");
   }
 
   function handleDuration(value: string, label: string) {
     setForm((current) => ({ ...current, durationId: value }));
+    setSlots([]);
+    setSelectedSlot(null);
+    setPrice(null);
     addMessage("user", label);
     addMessage("bot", chatbotMessages.namePrompt);
     setMode("create-name");
   }
 
+  function clearSlotState() {
+    setSlots([]);
+    setSelectedSlot(null);
+    setPrice(null);
+    setVisibleSlotCount(INITIAL_SLOT_COUNT);
+  }
+
+  function handlePendingLimit(message?: string) {
+    clearSlotState();
+    addMessage("bot", message || `You already have ${bookingLimits.maxPendingRequestsPerPhone} pending booking requests. Please contact our team before creating another one.`);
+    showNextActions();
+  }
+
   async function fetchSlots(selectedDate: string) {
     setIsLoading(true);
     setSlots([]);
+    setSelectedSlot(null);
+    setPrice(null);
     setVisibleSlotCount(INITIAL_SLOT_COUNT);
     addMessage("bot", chatbotMessages.loadingSlots);
 
@@ -268,13 +372,20 @@ export function BookingChatbot() {
       const response = await fetch("/api/chatbot/availability", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sportId: form.sportId, durationId: form.durationId, date: selectedDate }),
+        body: JSON.stringify({ sportId: form.sportId, durationId: form.durationId, date: selectedDate, phone: form.phone }),
       });
-      const data = (await response.json()) as { ok: boolean; slots?: Slot[]; message?: string };
-      if (!response.ok || !data.ok) throw new Error(data.message || chatbotMessages.genericError);
+      const data = (await response.json()) as { ok: boolean; slots?: Slot[]; price?: PriceEstimate; code?: string; message?: string };
+      if (!response.ok || !data.ok) {
+        if (data.code === "PENDING_LIMIT") {
+          handlePendingLimit(data.message);
+          return;
+        }
+        throw new Error(data.message || chatbotMessages.genericError);
+      }
 
       const nextSlots = data.slots ?? [];
       setSlots(nextSlots);
+      setPrice(data.price ?? localPrice ?? null);
       addMessage("bot", nextSlots.length > 0 ? chatbotMessages.slotsPrompt : chatbotMessages.noSlots);
       setMode("create-slots");
     } catch (error) {
@@ -285,32 +396,68 @@ export function BookingChatbot() {
     }
   }
 
-  async function createBooking(slot: Slot) {
-    setIsLoading(true);
+  function handleSlotSelect(slot: Slot) {
+    setSelectedSlot(slot);
     addMessage("user", slot.label);
+    addMessage("bot", chatbotMessages.confirmBookingPrompt);
+    setMode("create-confirm");
+  }
+
+  async function createBooking() {
+    if (!selectedSlot) return;
+    setIsLoading(true);
+    addMessage("user", chatbotMessages.confirmBookingRequest);
     addMessage("bot", chatbotMessages.creatingBooking);
 
     try {
       const response = await fetch("/api/chatbot/create-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, startIso: slot.startIso, endIso: slot.endIso, website: "" }),
+        body: JSON.stringify({ ...form, startIso: selectedSlot.startIso, endIso: selectedSlot.endIso, website: "" }),
       });
       const data = (await response.json()) as { ok: boolean; booking?: BookingRecord; code?: string; message?: string };
       if (!response.ok || !data.ok || !data.booking) {
+        if (data.code === "PENDING_LIMIT") {
+          handlePendingLimit(data.message);
+          return;
+        }
         if (data.code === "SLOT_TAKEN") throw new Error(chatbotMessages.slotTaken);
         throw new Error(data.message || chatbotMessages.bookingFailure);
       }
 
+      notifyAdminPortalBookingCreated();
+      const whatsappMessage = renderTemplate(whatsappTemplates.bookingNotifyTeam, {
+        bookingId: data.booking.bookingId,
+        name: data.booking.clientName,
+        phone: data.booking.phone,
+        sport: data.booking.sportName,
+        date: formatDate(data.booking.startIso),
+        time: formatTimeRange(data.booking.startIso, data.booking.endIso),
+        duration: `${data.booking.durationMinutes} minutes`,
+        price: (price ?? localPrice)?.label ?? "Price will be confirmed by our team",
+        status: "Pending",
+      });
+
       addMessage(
         "bot",
-        <span>
-          {chatbotMessages.bookingSuccessPrefix} Your booking ID is <strong>{data.booking.bookingId}</strong>. {chatbotMessages.bookingSuccessSuffix}
-        </span>,
+        <div className="space-y-3">
+          <span className="block">
+            {chatbotMessages.bookingSuccessPrefix} Your booking ID is <strong>{data.booking.bookingId}</strong>. {chatbotMessages.bookingSuccessSuffix}
+          </span>
+          <a
+            href={buildWhatsAppUrl(whatsappMessage)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-full items-center justify-center rounded-full bg-emerald-500 px-4 py-2.5 text-xs font-black text-slate-950 transition hover:-translate-y-0.5 hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
+          >
+            {chatbotMessages.notifyWhatsapp}
+          </a>
+        </div>,
       );
       showNextActions();
     } catch (error) {
       addMessage("bot", error instanceof Error ? error.message : chatbotMessages.bookingFailure);
+      setMode(slots.length > 0 ? "create-slots" : "create-date");
     } finally {
       setIsLoading(false);
     }
@@ -383,6 +530,8 @@ export function BookingChatbot() {
       addMessage("user", phone);
       addMessage("bot", chatbotMessages.datePrompt);
       setInputValue("");
+      setCalendarMonth(`${bookingWindow.min.slice(0, 7)}-01`);
+      setIsDatePickerOpen(false);
       setMode("create-date");
       return;
     }
@@ -401,6 +550,7 @@ export function BookingChatbot() {
     }
   }
 
+
   function handleDateChange(value: string) {
     if (!value) return;
     if (value < bookingWindow.min) {
@@ -412,38 +562,53 @@ export function BookingChatbot() {
       return;
     }
     setForm((current) => ({ ...current, date: value }));
+    setSelectedSlot(null);
+    setIsDatePickerOpen(false);
+    setCalendarMonth(`${value.slice(0, 7)}-01`);
     addMessage("user", value);
     void fetchSlots(value);
   }
+
 
   const showTextInput = ["create-name", "create-phone", "view-phone"].includes(mode);
   const inputPlaceholder = mode.includes("phone") ? "03001234567" : "Type here...";
   const visibleSlots = slots.slice(0, visibleSlotCount);
   const showFlowControls = mode !== "menu";
+  const summaryPrice = (price ?? localPrice)?.label ?? "Price will be confirmed by our team";
+  const selectedDateLabel = form.date ? formatDate(`${form.date}T12:00:00+05:00`) : "No date selected";
+  const calendarDays = useMemo(() => getCalendarDays(calendarMonth, bookingWindow.min, bookingWindow.max, form.date), [bookingWindow.max, bookingWindow.min, calendarMonth, form.date]);
+  const previousMonth = addMonths(calendarMonth, -1);
+  const nextMonth = addMonths(calendarMonth, 1);
+  const canShowPreviousMonth = monthHasAllowedDate(previousMonth, bookingWindow.min, bookingWindow.max);
+  const canShowNextMonth = monthHasAllowedDate(nextMonth, bookingWindow.min, bookingWindow.max);
+  const calendarMonthLabel = new Intl.DateTimeFormat("en-PK", { month: "long", year: "numeric", timeZone: "UTC" }).format(dateInputToUtcDate(calendarMonth));
 
   return (
     <>
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        aria-label="Open booking assistant"
+        aria-label="Open Elite Courts booking assistant"
         className={cn(
-          "fixed bottom-24 left-5 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--accent)] text-slate-950 shadow-[0_18px_60px_-20px_rgba(6,182,212,0.9)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 sm:bottom-6",
+          "group fixed bottom-24 left-5 z-50 inline-flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-[1.35rem] border border-cyan-200/35 bg-[linear-gradient(135deg,var(--accent),#34d399)] text-slate-950 shadow-[0_22px_70px_-24px_rgba(6,182,212,0.95)] transition-all duration-200 hover:-translate-y-1 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 sm:bottom-6",
           isOpen && "pointer-events-none translate-y-2 opacity-0",
         )}
       >
-        <MessageCircle className="h-6 w-6" />
-        <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-[color:var(--bg)] bg-emerald-400" />
+        <Bot className="h-7 w-7 transition group-hover:scale-105" />
+        <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-[color:var(--bg)] bg-emerald-400">
+          <Sparkles className="h-3 w-3" aria-hidden="true" />
+        </span>
+        <span className="absolute left-1/2 top-full mt-2 hidden -translate-x-1/2 rounded-full bg-slate-950 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white shadow-lg group-hover:block sm:whitespace-nowrap">Book</span>
       </button>
 
       <aside
         aria-label="Elite Courts booking assistant"
         className={cn(
-          "fixed bottom-4 left-3 z-50 w-[calc(100vw-1.5rem)] max-w-[25rem] overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] shadow-[0_30px_90px_-34px_rgba(2,6,23,0.85)] backdrop-blur-xl transition-all duration-300 sm:bottom-5 sm:left-5",
+          "fixed bottom-3 left-3 z-50 flex max-h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[25rem] flex-col overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] shadow-[0_30px_90px_-34px_rgba(2,6,23,0.85)] backdrop-blur-xl transition-all duration-300 sm:bottom-5 sm:left-5 sm:max-h-[calc(100dvh-2.5rem)]",
           isOpen ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
         )}
       >
-        <div className="flex items-center justify-between border-b border-[color:var(--border)] px-4 py-3">
+        <div className="shrink-0 flex items-center justify-between border-b border-[color:var(--border)] px-4 py-3">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]">
               <CalendarCheck className="h-5 w-5" />
@@ -463,7 +628,7 @@ export function BookingChatbot() {
           </button>
         </div>
 
-        <div ref={scrollRef} className="max-h-[58vh] space-y-3 overflow-y-auto px-4 py-4 sm:max-h-[34rem]">
+        <div ref={scrollRef} className="max-h-[clamp(12rem,calc(100dvh-14rem),30rem)] min-h-0 space-y-3 overflow-y-auto px-4 py-4 overscroll-contain scroll-smooth">
           {messages.map((message) => (
             <ChatMessage key={message.id} role={message.role}>{message.content}</ChatMessage>
           ))}
@@ -471,38 +636,106 @@ export function BookingChatbot() {
           {mode === "menu" && <ChatOptions options={mainOptions} onSelect={handleMainOption} />}
           {mode === "final" && <ChatOptions options={nextActionOptions} onSelect={handleMainOption} />}
           {mode === "create-sport" && (
-            <ChatOptions options={bookingSports.map((sport) => ({ label: sport.name, value: sport.id }))} onSelect={handleSport} />
+            <ChatOptions options={activeSports.map((sport) => ({ label: sport.name, value: sport.id }))} onSelect={handleSport} />
           )}
           {mode === "create-duration" && (
-            <ChatOptions options={bookingDurations.map((duration) => ({ label: duration.label, value: duration.id }))} onSelect={handleDuration} />
+            <ChatOptions options={durationOptions.map((duration) => ({ label: duration.label, value: duration.id }))} onSelect={handleDuration} />
           )}
           {mode === "create-date" && (
-            <div className="space-y-2">
-              <input
-                type="date"
-                min={bookingWindow.min}
-                max={bookingWindow.max}
-                onChange={(event) => handleDateChange(event.target.value)}
-                className="h-12 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-bold text-[color:var(--text)] focus:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/15"
-              />
-              <p className="text-xs font-semibold text-[color:var(--muted)]">Bookings are available until {bookingWindow.max}.</p>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setIsDatePickerOpen((open) => !open)}
+                aria-label="Select booking date"
+                aria-expanded={isDatePickerOpen}
+                aria-controls="booking-assistant-calendar-panel"
+                className="group flex w-full items-center justify-between gap-3 rounded-[1.35rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300/45 hover:bg-[color:var(--surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35"
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)] shadow-[0_12px_30px_-22px_rgba(6,182,212,0.9)] transition group-hover:scale-105">
+                    <CalendarDays className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-black text-[color:var(--text)]">{form.date ? "Booking date selected" : "Select booking date"}</span>
+                    <span className="block truncate text-xs font-semibold text-[color:var(--muted)]">{form.date ? selectedDateLabel : "Tap to open the calendar"}</span>
+                  </span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[color:var(--surface-strong)] px-3 py-1.5 text-[11px] font-black text-[color:var(--accent-strong)] shadow-sm">
+                  {form.date ? "Change" : "Calendar"}
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition", isDatePickerOpen && "rotate-180")} aria-hidden="true" />
+                </span>
+              </button>
+
+              {isDatePickerOpen && (
+                <div id="booking-assistant-calendar-panel" className="rounded-[1.35rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-3 shadow-[0_18px_55px_-38px_rgba(2,6,23,0.75)]">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCalendarMonth(previousMonth)}
+                      disabled={!canShowPreviousMonth}
+                      aria-label="Show previous month"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--border)] text-[color:var(--text)] transition hover:border-cyan-300/45 hover:bg-[color:var(--surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35 disabled:cursor-not-allowed disabled:opacity-35"
+                    >
+                      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <p className="text-sm font-black text-[color:var(--text)]">{calendarMonthLabel}</p>
+                    <button
+                      type="button"
+                      onClick={() => setCalendarMonth(nextMonth)}
+                      disabled={!canShowNextMonth}
+                      aria-label="Show next month"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--border)] text-[color:var(--text)] transition hover:border-cyan-300/45 hover:bg-[color:var(--surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35 disabled:cursor-not-allowed disabled:opacity-35"
+                    >
+                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase tracking-[0.08em] text-[color:var(--muted)]">
+                    {weekdayLabels.map((day) => <span key={day} className="py-1">{day}</span>)}
+                  </div>
+                  <div className="mt-1 grid grid-cols-7 gap-1">
+                    {calendarDays.map((day) => (
+                      <button
+                        key={day.value}
+                        type="button"
+                        disabled={day.isDisabled}
+                        onClick={() => handleDateChange(day.value)}
+                        className={cn(
+                          "aspect-square rounded-xl text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35",
+                          day.isSelected && "bg-[color:var(--accent)] text-slate-950 shadow-[0_12px_30px_-22px_rgba(6,182,212,0.9)]",
+                          !day.isSelected && day.isCurrentMonth && !day.isDisabled && "bg-[color:var(--surface-strong)] text-[color:var(--text)] hover:-translate-y-0.5 hover:border-cyan-300/45 hover:bg-[color:var(--accent-soft)] hover:text-[color:var(--accent-strong)]",
+                          !day.isSelected && !day.isCurrentMonth && !day.isDisabled && "text-[color:var(--muted)] hover:bg-[color:var(--surface-strong)]",
+                          day.isDisabled && "cursor-not-allowed text-[color:var(--muted)] opacity-30",
+                        )}
+                      >
+                        {day.day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-xs font-semibold text-[color:var(--muted)]">Bookings are available from {bookingWindow.min} to {bookingWindow.max}.</p>
             </div>
           )}
           {mode === "create-slots" && slots.length > 0 && (
             <div className="space-y-3">
-              <div className="grid grid-cols-1 gap-2">
-                {visibleSlots.map((slot) => (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    disabled={isLoading}
-                    onClick={() => createBooking(slot)}
-                    className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-left text-sm font-extrabold text-[color:var(--text)] transition hover:-translate-y-0.5 hover:border-cyan-300/45 hover:bg-[color:var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35 disabled:opacity-50"
-                  >
-                    {slot.label}
-                  </button>
-                ))}
+              <div className="max-h-64 overflow-y-auto rounded-[1.35rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-2 pr-1 shadow-inner">
+                <div className="grid grid-cols-1 gap-2">
+                  {visibleSlots.map((slot) => (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleSlotSelect(slot)}
+                      className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-left text-sm font-extrabold text-[color:var(--text)] transition hover:-translate-y-0.5 hover:border-cyan-300/45 hover:bg-[color:var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35 disabled:opacity-50"
+                    >
+                      <span className="block">{slot.label}</span>
+                      {slot.priceLabel && <span className="mt-1 block text-xs font-bold text-[color:var(--muted)]">Estimated price: {slot.priceLabel}</span>}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <p className="text-[11px] font-semibold text-[color:var(--muted)]">Scroll inside the slot list if more times are visible.</p>
               {visibleSlotCount < slots.length && (
                 <button
                   type="button"
@@ -514,6 +747,29 @@ export function BookingChatbot() {
               )}
             </div>
           )}
+          {mode === "create-confirm" && selectedSlot && (
+            <div className="space-y-3 rounded-[1.35rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-sm">
+              <p className="font-black text-[color:var(--text)]">Booking Summary</p>
+              <div className="space-y-1 text-xs font-semibold text-[color:var(--muted)]">
+                <p><strong>Name:</strong> {form.clientName}</p>
+                <p><strong>Phone:</strong> {form.phone}</p>
+                <p><strong>Sport:</strong> {selectedSport?.name}</p>
+                <p><strong>Duration:</strong> {selectedDuration?.label}</p>
+                <p><strong>Date:</strong> {formatDate(selectedSlot.startIso)}</p>
+                <p><strong>Time:</strong> {formatTimeRange(selectedSlot.startIso, selectedSlot.endIso)}</p>
+                <p><strong>Estimated Price:</strong> {summaryPrice}</p>
+                <p><strong>Status:</strong> Pending</p>
+              </div>
+              <div className="grid gap-2">
+                <button type="button" disabled={isLoading} onClick={createBooking} className="rounded-full bg-[color:var(--accent)] px-4 py-3 text-xs font-black text-slate-950 transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 disabled:opacity-50">
+                  {chatbotMessages.confirmBookingRequest}
+                </button>
+                <button type="button" onClick={() => setMode("create-slots")} className="rounded-full border border-[color:var(--border)] px-4 py-3 text-xs font-black text-[color:var(--text)] transition hover:bg-[color:var(--surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35">
+                  {chatbotMessages.changeSlot}
+                </button>
+              </div>
+            </div>
+          )}
           {isLoading && (
             <div className="flex justify-start">
               <div className="inline-flex items-center gap-2 rounded-full bg-[color:var(--surface)] px-3 py-2 text-xs font-bold text-[color:var(--muted)]">
@@ -523,7 +779,7 @@ export function BookingChatbot() {
           )}
         </div>
 
-        <div className="border-t border-[color:var(--border)] p-3">
+        <div className="shrink-0 border-t border-[color:var(--border)] bg-[color:var(--surface-strong)] p-3">
           {showTextInput && (
             <form onSubmit={handleSubmit} className="flex gap-2">
               <input

@@ -17,11 +17,11 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { bookingDurations } from "@/data/bookingDurations";
 import { bookingSyncConfig } from "@/data/bookingConfig";
 import { getBookingStatus } from "@/data/bookingStatuses";
 import { businessHours } from "@/data/businessHours";
-import { bookingSports } from "@/data/sports";
+import { getActiveBookingSports } from "@/data/sports";
+import { getAllowedDurationsForSport, getBookingPriceEstimate } from "@/data/sportBookingConfig";
 import { bookingTableColumns, type AdminBookingColumnKey } from "@/data/adminBookingTableColumns";
 import { REGEX } from "@/lib/regex";
 import { cn } from "@/lib/utils";
@@ -56,6 +56,14 @@ interface Slot {
   label: string;
   startIso: string;
   endIso: string;
+  priceLabel?: string;
+}
+
+interface PriceEstimate {
+  amount: number | null;
+  currency: string;
+  label: string;
+  note?: string;
 }
 
 interface AdminPortalProps {
@@ -63,6 +71,8 @@ interface AdminPortalProps {
 }
 
 type SortDirection = "asc" | "desc";
+const activeSports = getActiveBookingSports();
+
 type ModalState =
   | { type: "none" }
   | { type: "cancel"; booking: BookingRecord }
@@ -155,6 +165,14 @@ function isUpcomingAfterToday(booking: BookingRecord) {
   return new Date(booking.startIso) >= getCurrentBusinessWindow().end;
 }
 
+function getBookingWindow() {
+  const businessDate = getBusinessDateForIso(new Date().toISOString());
+  const [year, month, day] = businessDate.split("-").map(Number);
+  const dayIndex = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  const daysUntilThisSunday = (7 - dayIndex) % 7;
+  return { min: businessDate, max: addDays(businessDate, daysUntilThisSunday + 7) };
+}
+
 function StatCard({ label, value, icon: Icon, hint }: { label: string; value: number | string; icon: LucideIcon; hint?: string }) {
   return (
     <div className="rounded-[1.7rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur-xl">
@@ -177,11 +195,12 @@ function getStatusLabel(status: string) {
 }
 
 function getDefaultForm(booking?: BookingRecord): BookingFormState {
-  const duration = bookingDurations.find((item) => item.minutes === booking?.durationMinutes) ?? bookingDurations[1];
-  const sport = bookingSports.find((item) => item.id === booking?.sportId) ?? bookingSports[0];
+  const sport = activeSports.find((item) => item.id === booking?.sportId) ?? activeSports[0];
+  const durations = sport ? getAllowedDurationsForSport(sport.id, Boolean(booking)) : [];
+  const duration = durations.find((item) => item.minutes === booking?.durationMinutes) ?? durations[0];
   return {
-    sportId: sport.id,
-    durationId: duration.id,
+    sportId: sport?.id ?? "",
+    durationId: duration?.id ?? "",
     clientName: booking?.clientName ?? "",
     phone: booking?.phone ?? "",
     date: booking ? getBusinessDateForIso(booking.startIso) : formatDateInput(),
@@ -194,7 +213,7 @@ function getDefaultForm(booking?: BookingRecord): BookingFormState {
 function ModalShell({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/58 px-4 py-6 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] shadow-[0_30px_90px_-34px_rgba(2,6,23,0.95)]">
+      <div className="max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] shadow-[0_30px_90px_-34px_rgba(2,6,23,0.95)]">
         <div className="flex items-center justify-between border-b border-[color:var(--border)] px-5 py-4">
           <h2 className="text-xl font-black text-[color:var(--text)]">{title}</h2>
           <button type="button" onClick={onClose} className="rounded-full p-2 text-[color:var(--muted)] transition hover:bg-[color:var(--surface)] hover:text-[color:var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35">
@@ -231,8 +250,11 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
+  const [slotNotice, setSlotNotice] = useState("");
+  const [slotPrice, setSlotPrice] = useState<PriceEstimate | null>(null);
 
   async function loadBookings(silent = false) {
+    if (!isAuthenticated) return;
     if (!silent) setIsLoadingBookings(true);
     setBookingsError("");
     try {
@@ -263,6 +285,19 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
     return () => window.clearInterval(interval);
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    try {
+      const channel = new BroadcastChannel("elite-courts-bookings");
+      channel.onmessage = (event) => {
+        if (event.data?.type === "booking-created") void loadBookings(true);
+      };
+      return () => channel.close();
+    } catch {
+      return undefined;
+    }
+  }, [isAuthenticated]);
+
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoggingIn(true);
@@ -288,6 +323,8 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
     await fetch("/api/portal/logout", { method: "POST" });
     setIsAuthenticated(false);
     setBookings([]);
+    setStats(null);
+    setLastUpdated(null);
   }
 
   function toggleSort(key: AdminBookingColumnKey) {
@@ -353,7 +390,12 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
   async function loadSlots(excludeEventId?: string) {
     setFormError("");
     setSlots([]);
-    if (!form.sportId || !form.durationId || !form.date) return;
+    setSlotPrice(null);
+    setSlotNotice("");
+    if (!form.sportId || !form.durationId || !form.date) {
+      setSlotNotice("Choose sport, duration, and date before loading slots.");
+      return;
+    }
     setFormLoading(true);
     try {
       const response = await fetch("/api/portal/availability", {
@@ -361,9 +403,11 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sportId: form.sportId, durationId: form.durationId, date: form.date, excludeEventId }),
       });
-      const data = (await response.json()) as { ok: boolean; slots?: Slot[]; message?: string };
+      const data = (await response.json()) as { ok: boolean; slots?: Slot[]; price?: PriceEstimate; message?: string };
       if (!response.ok || !data.ok) throw new Error(data.message || "Unable to load slots.");
       setSlots(data.slots ?? []);
+      setSlotPrice(data.price ?? getBookingPriceEstimate({ sportId: form.sportId, durationId: form.durationId, date: form.date }));
+      setSlotNotice((data.slots ?? []).length > 0 ? "Choose a slot below. Scroll inside the list if more times are available." : "No available slots found for this selection.");
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to load slots.");
     } finally {
@@ -375,6 +419,8 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
     setForm(getDefaultForm());
     setSlots([]);
     setFormError("");
+    setSlotNotice("");
+    setSlotPrice(null);
     setModal({ type: "create" });
   }
 
@@ -382,6 +428,8 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
     setForm(getDefaultForm(booking));
     setSlots([{ id: `${booking.startIso}_${booking.endIso}`, label: `${formatTime(booking.startIso)} - ${formatTime(booking.endIso)} (current)`, startIso: booking.startIso, endIso: booking.endIso }]);
     setFormError("");
+    setSlotNotice("Current slot is selected. Load slots again if you change sport, duration, or date.");
+    setSlotPrice(getBookingPriceEstimate({ sportId: booking.sportId, durationId: (getAllowedDurationsForSport(booking.sportId, true).find((item) => item.minutes === booking.durationMinutes)?.id ?? ""), date: getBusinessDateForIso(booking.startIso) }));
     setModal({ type: "edit", booking });
   }
 
@@ -412,6 +460,9 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
       if (!response.ok || !data.ok || !data.booking) throw new Error(data.message || "Unable to save booking.");
       setToast(modal.type === "edit" ? "Booking updated in Google Calendar." : "Booking created in Google Calendar.");
       setModal({ type: "none" });
+      setSlots([]);
+      setSlotNotice("");
+      setSlotPrice(null);
       await loadBookings(true);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to save booking.");
@@ -448,11 +499,49 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
   }, [bookings, search, sportFilter, statusFilter, sortDirection, sortKey]);
 
   const sportCounts = useMemo(() => {
-    return bookingSports.map((sport) => ({
+    return activeSports.map((sport) => ({
       sport,
       count: bookings.filter((booking) => booking.sportId === sport.id && booking.status === "confirmed").length,
     }));
   }, [bookings]);
+
+  const formDurationOptions = getAllowedDurationsForSport(form.sportId, modal.type === "edit");
+  const bookingWindow = getBookingWindow();
+  const currentPrice = slotPrice ?? (form.sportId && form.durationId ? getBookingPriceEstimate({ sportId: form.sportId, durationId: form.durationId, date: form.date }) : null);
+  const isBookingFormReady = Boolean(
+    form.sportId
+      && form.durationId
+      && REGEX.name.test(form.clientName.trim())
+      && REGEX.pakistaniMobile.test(form.phone.replace(/[\s-]/g, ""))
+      && form.date
+      && form.date >= bookingWindow.min
+      && form.date <= bookingWindow.max
+      && form.startIso
+      && form.endIso
+      && form.status,
+  );
+
+  function handleSportChange(value: string) {
+    const durations = getAllowedDurationsForSport(value, modal.type === "edit");
+    setForm((current) => ({ ...current, sportId: value, durationId: durations[0]?.id ?? "", startIso: "", endIso: "" }));
+    setSlots([]);
+    setSlotPrice(null);
+    setSlotNotice("Sport changed. Please load available slots again.");
+  }
+
+  function handleDurationChange(value: string) {
+    setForm((current) => ({ ...current, durationId: value, startIso: "", endIso: "" }));
+    setSlots([]);
+    setSlotPrice(null);
+    setSlotNotice("Duration changed. Please load available slots again.");
+  }
+
+  function handleDateChange(value: string) {
+    setForm((current) => ({ ...current, date: value, startIso: "", endIso: "" }));
+    setSlots([]);
+    setSlotPrice(null);
+    setSlotNotice("Date changed. Please load available slots again.");
+  }
 
   if (!isAuthenticated) {
     return (
@@ -519,7 +608,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-          <section className="rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur-xl">
+          <section className="flex h-[min(48rem,calc(100dvh-8rem))] min-h-[28rem] min-w-0 flex-col overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur-xl">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-xl font-black text-[color:var(--text)]">Booking Requests</h2>
@@ -542,15 +631,15 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
               </select>
               <select value={sportFilter} onChange={(event) => setSportFilter(event.target.value)} className="h-12 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 text-sm font-bold text-[color:var(--text)] focus:outline-none focus:ring-2 focus:ring-cyan-400/15">
                 <option value="all">All Sports</option>
-                {bookingSports.map((sport) => <option key={sport.id} value={sport.id}>{sport.name}</option>)}
+                {activeSports.map((sport) => <option key={sport.id} value={sport.id}>{sport.name}</option>)}
               </select>
             </div>
 
             {toast && <p className="mt-4 rounded-2xl bg-[color:var(--accent-soft)] px-4 py-3 text-sm font-bold text-[color:var(--accent-strong)]">{toast}</p>}
             {bookingsError && <p className="mt-4 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm font-bold text-rose-600 dark:text-rose-200">{bookingsError}</p>}
 
-            <div className="mt-5 overflow-hidden rounded-[1.4rem] border border-[color:var(--border)]">
-              <div className="hidden bg-[color:var(--surface-strong)] px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-[color:var(--muted)] lg:grid lg:grid-cols-[1.15fr_1fr_1fr_1fr_0.8fr_13rem]">
+            <div className="mt-5 min-h-0 flex-1 overflow-y-auto rounded-[1.4rem] border border-[color:var(--border)] overscroll-contain">
+              <div className="sticky top-0 z-10 hidden border-b border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-[color:var(--muted)] lg:grid lg:grid-cols-[1.15fr_1fr_1fr_1fr_0.8fr_13rem]">
                 {bookingTableColumns.map((column) => (
                   <button key={column.key} type="button" disabled={!column.sortable} onClick={() => toggleSort(column.key)} className={cn("text-left uppercase tracking-[0.14em]", column.sortable && "transition hover:text-[color:var(--accent-strong)]")}> 
                     {column.label}{sortKey === column.key && column.sortable ? (sortDirection === "asc" ? " ↑" : " ↓") : ""}
@@ -664,13 +753,13 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
           <form onSubmit={submitBookingForm} className="space-y-5 p-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2 text-sm font-bold text-[color:var(--text)]">Sport
-                <select value={form.sportId} onChange={(event) => setForm((current) => ({ ...current, sportId: event.target.value, startIso: "", endIso: "" }))} className="h-11 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm">
-                  {bookingSports.map((sport) => <option key={sport.id} value={sport.id}>{sport.name}</option>)}
+                <select value={form.sportId} onChange={(event) => handleSportChange(event.target.value)} className="h-11 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm">
+                  {activeSports.map((sport) => <option key={sport.id} value={sport.id}>{sport.name}</option>)}
                 </select>
               </label>
               <label className="space-y-2 text-sm font-bold text-[color:var(--text)]">Duration
-                <select value={form.durationId} onChange={(event) => setForm((current) => ({ ...current, durationId: event.target.value, startIso: "", endIso: "" }))} className="h-11 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm">
-                  {bookingDurations.map((duration) => <option key={duration.id} value={duration.id}>{duration.label}</option>)}
+                <select value={form.durationId} onChange={(event) => handleDurationChange(event.target.value)} className="h-11 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm">
+                  {formDurationOptions.map((duration) => <option key={duration.id} value={duration.id}>{duration.label}</option>)}
                 </select>
               </label>
               <label className="space-y-2 text-sm font-bold text-[color:var(--text)]">Client Name
@@ -680,7 +769,8 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
                 <input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder="03001234567" className="h-11 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm" />
               </label>
               <label className="space-y-2 text-sm font-bold text-[color:var(--text)]">Date
-                <input type="date" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value, startIso: "", endIso: "" }))} className="h-11 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm" />
+                <input type="date" min={bookingWindow.min} max={bookingWindow.max} value={form.date} onChange={(event) => handleDateChange(event.target.value)} className="h-11 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm" />
+                <span className="block text-[11px] font-semibold text-[color:var(--muted)]">Allowed range: {bookingWindow.min} to {bookingWindow.max}</span>
               </label>
               <label className="space-y-2 text-sm font-bold text-[color:var(--text)]">Status
                 <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as "pending" | "confirmed" }))} className="h-11 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm">
@@ -694,17 +784,21 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
                 <p className="text-sm font-black text-[color:var(--text)]">Available Slots</p>
                 <button type="button" onClick={() => loadSlots(modal.type === "edit" ? modal.booking.eventId : undefined)} disabled={formLoading} className="inline-flex items-center gap-2 rounded-full bg-[color:var(--accent)] px-4 py-2 text-xs font-black text-slate-950 disabled:opacity-50">{formLoading && <Loader2 className="h-4 w-4 animate-spin" />}Load Slots</button>
               </div>
-              <div className="grid gap-2 sm:grid-cols-2">
+              {slotNotice && <p className="text-xs font-semibold text-[color:var(--muted)]">{slotNotice}</p>}
+              {currentPrice && <p className="rounded-2xl bg-[color:var(--surface-strong)] px-3 py-2 text-xs font-black text-[color:var(--text)]">Estimated price: {currentPrice.label}</p>}
+              <div className="max-h-64 overflow-y-auto rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-2 pr-1">
+                <div className="grid gap-2 sm:grid-cols-2">
                 {slots.map((slot) => (
                   <button key={slot.id} type="button" onClick={() => setForm((current) => ({ ...current, startIso: slot.startIso, endIso: slot.endIso }))} className={cn("rounded-2xl border px-3 py-2 text-left text-xs font-black transition", form.startIso === slot.startIso ? "border-cyan-300 bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]" : "border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--text)] hover:border-cyan-300/45")}>{slot.label}</button>
                 ))}
                 {slots.length === 0 && <p className="text-xs font-semibold text-[color:var(--muted)]">Load slots after choosing sport, duration, and date.</p>}
+                </div>
               </div>
             </div>
             {formError && <p className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm font-bold text-rose-600 dark:text-rose-200">{formError}</p>}
             <div className="flex flex-wrap justify-end gap-3">
               <button type="button" onClick={() => setModal({ type: "none" })} className="rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-black text-[color:var(--text)]">Close</button>
-              <button type="submit" disabled={formLoading} className="inline-flex items-center gap-2 rounded-full bg-[color:var(--accent)] px-5 py-2 text-sm font-black text-slate-950 disabled:opacity-50">{formLoading && <Loader2 className="h-4 w-4 animate-spin" />}{modal.type === "edit" ? "Save Changes" : "Create Booking"}</button>
+              <button type="submit" disabled={formLoading || !isBookingFormReady} title={!isBookingFormReady ? "Complete all required fields and select an available slot." : undefined} className="inline-flex items-center gap-2 rounded-full bg-[color:var(--accent)] px-5 py-2 text-sm font-black text-slate-950 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">{formLoading && <Loader2 className="h-4 w-4 animate-spin" />}{modal.type === "edit" ? "Save Changes" : "Create Booking"}</button>
             </div>
           </form>
         </ModalShell>

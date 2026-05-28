@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getBookingDurationById } from "@/data/bookingDurations";
-import { getBookingSportById } from "@/data/sports";
-import { generateAvailableSlots, getBusinessWindowForDate, isDateInBookingWindow } from "@/lib/bookingUtils";
+import { getBookingPriceEstimate } from "@/data/sportBookingConfig";
+import { generateAvailableSlots, getSportBusinessWindowForDate, validateBookingConfigSelection } from "@/lib/bookingUtils";
 import { listBookingsForAvailability } from "@/lib/googleCalendar";
 import { requireAdminSession } from "@/lib/portalAuth";
 
@@ -19,20 +18,21 @@ export async function POST(request: Request) {
   try {
     await requireAdminSession();
     const payload = schema.parse(await request.json());
-    const sport = getBookingSportById(payload.sportId);
-    const duration = getBookingDurationById(payload.durationId);
-    if (!sport || !duration) return NextResponse.json({ ok: false, message: "Please choose a valid sport and duration." }, { status: 400 });
-    if (!isDateInBookingWindow(payload.date)) return NextResponse.json({ ok: false, message: "Selected date is outside the allowed booking window." }, { status: 400 });
+    const selection = validateBookingConfigSelection(payload);
+    if (!selection.ok) return NextResponse.json({ ok: false, message: selection.message }, { status: 400 });
 
-    const businessWindow = getBusinessWindowForDate(payload.date);
+    const businessWindow = getSportBusinessWindowForDate(selection.sport.id, payload.date);
+    if (!businessWindow) return NextResponse.json({ ok: false, message: "This sport is not available on the selected date." }, { status: 400 });
+
     const existingBookings = (await listBookingsForAvailability({
       timeMin: businessWindow.start.toISOString(),
       timeMax: businessWindow.end.toISOString(),
-      sportId: sport.id,
+      sportId: selection.sport.id,
     })).filter((booking) => booking.eventId !== payload.excludeEventId);
 
-    const slots = generateAvailableSlots({ date: payload.date, durationMinutes: duration.minutes, sportId: sport.id, existingBookings });
-    return NextResponse.json({ ok: true, slots });
+    const slots = generateAvailableSlots({ date: payload.date, durationMinutes: selection.duration.minutes, sportId: selection.sport.id, existingBookings });
+    const price = getBookingPriceEstimate({ sportId: selection.sport.id, durationId: selection.duration.id, date: payload.date });
+    return NextResponse.json({ ok: true, slots, price });
   } catch (error) {
     const status = error instanceof Error && error.message === "Unauthorized" ? 401 : 500;
     return NextResponse.json({ ok: false, message: status === 401 ? "Unauthorized" : "Unable to load available slots." }, { status });

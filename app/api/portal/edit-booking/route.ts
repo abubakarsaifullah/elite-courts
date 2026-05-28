@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getBookingDurationById } from "@/data/bookingDurations";
-import { getBookingSportById } from "@/data/sports";
 import {
   generateAvailableSlots,
-  getBusinessWindowForDate,
-  isDateInBookingWindow,
+  getSportBusinessWindowForDate,
   sanitizeText,
+  validateBookingConfigSelection,
   validateName,
   validatePakistaniMobile,
 } from "@/lib/bookingUtils";
@@ -36,21 +34,23 @@ export async function POST(request: Request) {
     if (new Date(existing.endIso).getTime() <= Date.now()) return NextResponse.json({ ok: false, code: "PAST_BOOKING", message: "Past bookings cannot be edited." }, { status: 409 });
     if (existing.status === "cancelled") return NextResponse.json({ ok: false, message: "Cancelled bookings cannot be edited. Create a new booking instead." }, { status: 400 });
 
-    const sport = getBookingSportById(payload.sportId);
-    const duration = getBookingDurationById(payload.durationId);
+    const selection = validateBookingConfigSelection(payload);
     const clientName = validateName(payload.clientName);
     const phone = validatePakistaniMobile(payload.phone);
 
-    if (!sport || !duration || !clientName || !phone) return NextResponse.json({ ok: false, message: "Please check the booking details." }, { status: 400 });
-    if (!isDateInBookingWindow(payload.date)) return NextResponse.json({ ok: false, message: "Selected date is outside the allowed booking window." }, { status: 400 });
+    if (!selection.ok || !clientName || !phone) {
+      return NextResponse.json({ ok: false, message: selection.ok ? "Please check the booking details." : selection.message }, { status: 400 });
+    }
 
-    const businessWindow = getBusinessWindowForDate(payload.date);
+    const businessWindow = getSportBusinessWindowForDate(selection.sport.id, payload.date);
+    if (!businessWindow) return NextResponse.json({ ok: false, message: "This sport is not available on the selected date." }, { status: 400 });
+
     const existingBookings = (await listBookingsForAvailability({
       timeMin: businessWindow.start.toISOString(),
       timeMax: businessWindow.end.toISOString(),
-      sportId: sport.id,
+      sportId: selection.sport.id,
     })).filter((booking) => booking.eventId !== payload.eventId);
-    const availableSlots = generateAvailableSlots({ date: payload.date, durationMinutes: duration.minutes, sportId: sport.id, existingBookings });
+    const availableSlots = generateAvailableSlots({ date: payload.date, durationMinutes: selection.duration.minutes, sportId: selection.sport.id, existingBookings });
     const requestedSlot = availableSlots.find((slot) => slot.startIso === payload.startIso && slot.endIso === payload.endIso);
     if (!requestedSlot) return NextResponse.json({ ok: false, code: "SLOT_TAKEN", message: "This slot is no longer available." }, { status: 409 });
 
@@ -58,9 +58,9 @@ export async function POST(request: Request) {
       eventId: payload.eventId,
       clientName: sanitizeText(clientName, 50),
       phone,
-      sportId: sport.id,
-      sportName: sport.name,
-      durationMinutes: duration.minutes,
+      sportId: selection.sport.id,
+      sportName: selection.sport.name,
+      durationMinutes: selection.duration.minutes,
       status: payload.status,
       startIso: requestedSlot.startIso,
       endIso: requestedSlot.endIso,

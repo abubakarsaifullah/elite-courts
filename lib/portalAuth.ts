@@ -3,15 +3,25 @@ import { cookies } from "next/headers";
 import { adminSessionConfig } from "@/data/adminSessionConfig";
 
 const SESSION_COOKIE_NAME = "elite_portal_session";
-function getConfiguredSessionMaxAgeSeconds() {
-  const minutes = adminSessionConfig.maxAgeMinutes;
-  return Math.max(15, minutes) * 60;
-}
 const HASH_PREFIX = "scrypt";
+
+interface SessionPayload {
+  username: string;
+  expiresAt: number;
+  sessionId: string;
+}
 
 export interface AdminSession {
   username: string;
   expiresAt: number;
+  sessionId: string;
+}
+
+const activeSessionIdsByUser = new Map<string, string[]>();
+
+function getConfiguredSessionMaxAgeSeconds() {
+  const minutes = adminSessionConfig.maxAgeMinutes;
+  return Math.max(15, minutes) * 60;
 }
 
 function base64url(input: string | Buffer) {
@@ -58,16 +68,45 @@ function signPayload(payload: string) {
   return createHmac("sha256", getSessionSecret()).update(payload).digest("base64url");
 }
 
+function registerActiveSession(username: string, sessionId: string) {
+  const maxSessions = Math.max(1, adminSessionConfig.maxActiveSessions);
+  const current = activeSessionIdsByUser.get(username) ?? [];
+
+  if (!adminSessionConfig.replaceOldSessionOnLogin && current.length >= maxSessions && !current.includes(sessionId)) {
+    throw new Error("MAX_ACTIVE_SESSIONS");
+  }
+
+  if (maxSessions === 1 && adminSessionConfig.replaceOldSessionOnLogin) {
+    activeSessionIdsByUser.set(username, [sessionId]);
+    return;
+  }
+
+  const next = [...current.filter((id) => id !== sessionId), sessionId].slice(-maxSessions);
+  activeSessionIdsByUser.set(username, next);
+}
+
+function isActiveSession(session: AdminSession) {
+  const maxSessions = Math.max(1, adminSessionConfig.maxActiveSessions);
+  const active = activeSessionIdsByUser.get(session.username);
+
+  // In serverless/after restart, the in-memory active session store may be empty.
+  // In that case the signed cookie is still trusted until it expires.
+  if (!active || active.length === 0) return true;
+  if (maxSessions <= 0) return true;
+  return active.includes(session.sessionId);
+}
+
 export function createSessionToken(username: string) {
-  const payload = base64url(
-    JSON.stringify({
-      username,
-      expiresAt: Date.now() + getConfiguredSessionMaxAgeSeconds() * 1000,
-      nonce: randomBytes(12).toString("base64url"),
-    }),
-  );
-  const signature = signPayload(payload);
-  return `${payload}.${signature}`;
+  const sessionId = randomBytes(16).toString("base64url");
+  const payload: SessionPayload = {
+    username,
+    sessionId,
+    expiresAt: Date.now() + getConfiguredSessionMaxAgeSeconds() * 1000,
+  };
+  registerActiveSession(username, sessionId);
+  const encodedPayload = base64url(JSON.stringify(payload));
+  const signature = signPayload(encodedPayload);
+  return `${encodedPayload}.${signature}`;
 }
 
 export function verifySessionToken(token: string | undefined | null): AdminSession | null {
@@ -81,12 +120,20 @@ export function verifySessionToken(token: string | undefined | null): AdminSessi
   if (signatureBuffer.length !== expectedBuffer.length || !timingSafeEqual(signatureBuffer, expectedBuffer)) return null;
 
   try {
-    const data = JSON.parse(fromBase64url(payload).toString("utf8")) as AdminSession;
-    if (!data.username || !data.expiresAt || data.expiresAt <= Date.now()) return null;
-    return data;
+    const data = JSON.parse(fromBase64url(payload).toString("utf8")) as SessionPayload;
+    if (!data.username || !data.expiresAt || !data.sessionId || data.expiresAt <= Date.now()) return null;
+    const session: AdminSession = data;
+    return isActiveSession(session) ? session : null;
   } catch {
     return null;
   }
+}
+
+export function clearActiveSession(token: string | undefined | null) {
+  const session = verifySessionToken(token);
+  if (!session) return;
+  const current = activeSessionIdsByUser.get(session.username) ?? [];
+  activeSessionIdsByUser.set(session.username, current.filter((id) => id !== session.sessionId));
 }
 
 export async function getAdminSessionFromCookies() {

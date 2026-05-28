@@ -1,6 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { businessHours, type BusinessDayHours, type Weekday, weekdayOrder } from "@/data/businessHours";
 import { bookingStatuses, type BookingStatusId } from "@/data/bookingStatuses";
+import { getBookingDurationById } from "@/data/bookingDurations";
+import {
+  getAllowedDurationsForSport,
+  getBookingPriceEstimate,
+  getSportBookingConfigById,
+  sportBookingSettings,
+} from "@/data/sportBookingConfig";
 import { getBookingSportById } from "@/data/sports";
 import { REGEX } from "@/lib/regex";
 
@@ -9,6 +16,7 @@ export interface BookingSlot {
   label: string;
   startIso: string;
   endIso: string;
+  priceLabel?: string;
 }
 
 export interface BookingRecord {
@@ -41,16 +49,6 @@ export interface BookingInput {
   endIso: string;
   createdAt: string;
 }
-
-const weekdayIndexMap: Record<Weekday, number> = {
-  sunday: 0,
-  monday: 1,
-  tuesday: 2,
-  wednesday: 3,
-  thursday: 4,
-  friday: 5,
-  saturday: 6,
-};
 
 const weekdayByUtcIndex = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
 
@@ -124,16 +122,31 @@ export function getBusinessHoursForDate(dateString: string): BusinessDayHours {
   return businessHours.weeklyHours[getWeekdayForDate(dateString)];
 }
 
+export function getSportAvailabilityForDate(sportId: string, dateString: string) {
+  const sport = getSportBookingConfigById(sportId);
+  if (!sport || !sport.active) return null;
+  return sport.weeklyAvailability[getWeekdayForDate(dateString)];
+}
+
 export function karachiDateTimeToDate(dateString: string, time: string) {
   return new Date(`${dateString}T${time}:00+05:00`);
 }
 
-export function getBusinessWindowForDate(dateString: string) {
-  const hours = getBusinessHoursForDate(dateString);
+export function getWindowForHours(dateString: string, hours: BusinessDayHours) {
   const start = karachiDateTimeToDate(dateString, hours.open);
   const endDate = hours.closesNextDay || hours.close <= hours.open ? addDaysToDateString(dateString, 1) : dateString;
   const end = karachiDateTimeToDate(endDate, hours.close);
   return { businessDate: dateString, start, end, hours };
+}
+
+export function getBusinessWindowForDate(dateString: string) {
+  return getWindowForHours(dateString, getBusinessHoursForDate(dateString));
+}
+
+export function getSportBusinessWindowForDate(sportId: string, dateString: string) {
+  const hours = getSportAvailabilityForDate(sportId, dateString);
+  if (!hours) return null;
+  return getWindowForHours(dateString, hours);
 }
 
 export function getCurrentBusinessDate(now = new Date()) {
@@ -243,6 +256,17 @@ export function isBookingInBusinessWindow(booking: BookingRecord, window: { star
   return new Date(booking.startIso) < window.end && new Date(booking.endIso) > window.start;
 }
 
+export function roundUpToSlotBoundary(date: Date, intervalMinutes = sportBookingSettings.slotStartIntervalMinutes) {
+  const rounded = new Date(date);
+  rounded.setSeconds(0, 0);
+  const minutes = rounded.getMinutes();
+  const remainder = minutes % intervalMinutes;
+  if (remainder !== 0) {
+    rounded.setMinutes(minutes + (intervalMinutes - remainder));
+  }
+  return rounded;
+}
+
 export function generateAvailableSlots(params: {
   date: string;
   durationMinutes: number;
@@ -251,19 +275,27 @@ export function generateAvailableSlots(params: {
   now?: Date;
 }) {
   const now = params.now ?? new Date();
-  const { start, end, hours } = getBusinessWindowForDate(params.date);
+  const sportWindow = getSportBusinessWindowForDate(params.sportId, params.date);
   const slots: BookingSlot[] = [];
-  if (hours.closed) return slots;
+  if (!sportWindow || sportWindow.hours.closed) return slots;
 
-  const stepMs = params.durationMinutes * 60 * 1000;
+  const durationMs = params.durationMinutes * 60 * 1000;
+  const intervalMs = sportBookingSettings.slotStartIntervalMinutes * 60 * 1000;
   const bufferMs = businessHours.slotBufferMinutes * 60 * 1000;
   const blocked = params.existingBookings.filter(
     (booking) => booking.sportId === params.sportId && isBlockingBookingStatus(booking.status),
   );
 
-  for (let cursor = start.getTime(); cursor + stepMs <= end.getTime(); cursor += stepMs) {
+  let cursorMs = sportWindow.start.getTime();
+  if (now.getTime() + bufferMs >= cursorMs && now.getTime() < sportWindow.end.getTime()) {
+    cursorMs = roundUpToSlotBoundary(new Date(now.getTime() + bufferMs)).getTime();
+  }
+  if (cursorMs < sportWindow.start.getTime()) cursorMs = sportWindow.start.getTime();
+  cursorMs = roundUpToSlotBoundary(new Date(cursorMs)).getTime();
+
+  for (let cursor = cursorMs; cursor + durationMs <= sportWindow.end.getTime(); cursor += intervalMs) {
     const slotStart = new Date(cursor);
-    const slotEnd = new Date(cursor + stepMs);
+    const slotEnd = new Date(cursor + durationMs);
 
     if (slotStart.getTime() <= now.getTime() + bufferMs) continue;
 
@@ -274,7 +306,15 @@ export function generateAvailableSlots(params: {
     if (!hasConflict) {
       const startIso = slotStart.toISOString();
       const endIso = slotEnd.toISOString();
-      slots.push({ id: `${startIso}_${endIso}`, label: formatSlotLabel(startIso, endIso), startIso, endIso });
+      const duration = getAllowedDurationsForSport(params.sportId).find((item) => item.minutes === params.durationMinutes);
+      const price = duration ? getBookingPriceEstimate({ sportId: params.sportId, durationId: duration.id, date: params.date }) : null;
+      slots.push({
+        id: `${startIso}_${endIso}`,
+        label: formatSlotLabel(startIso, endIso),
+        startIso,
+        endIso,
+        priceLabel: price?.label,
+      });
     }
   }
 
@@ -321,7 +361,7 @@ export function buildEventTitle(status: BookingStatusId, sportName: string, clie
 }
 
 export function eventLooksLikeSport(summary: string | undefined, sportId: string) {
-  const sport = getBookingSportById(sportId);
+  const sport = getBookingSportById(sportId, { includeInactive: true });
   if (!sport || !summary) return false;
   return summary.toLowerCase().includes(sport.name.toLowerCase()) || summary.toLowerCase().includes(sportId);
 }
@@ -351,4 +391,22 @@ export function getStatusStats(bookings: BookingRecord[], now = new Date()) {
     todayConfirmed: activeConfirmed.filter((booking) => isBookingInBusinessWindow(booking, currentBusinessWindow)).length,
     upcomingConfirmed: activeConfirmed.filter((booking) => new Date(booking.startIso) >= currentBusinessWindow.end).length,
   };
+}
+
+export function validateBookingConfigSelection(params: { sportId: string; durationId: string; date: string }) {
+  const sport = getSportBookingConfigById(params.sportId);
+  if (!sport || !sport.active) return { ok: false as const, message: "Please choose an active sport." };
+
+  const duration = getBookingDurationById(params.durationId);
+  if (!duration) return { ok: false as const, message: "Please choose a valid duration." };
+
+  const allowedDuration = getAllowedDurationsForSport(params.sportId).find((item) => item.id === params.durationId);
+  if (!allowedDuration) return { ok: false as const, message: "This duration is not available for the selected sport." };
+
+  if (!isDateInBookingWindow(params.date)) return { ok: false as const, message: "Selected date is outside the allowed booking window." };
+
+  const sportWindow = getSportBusinessWindowForDate(params.sportId, params.date);
+  if (!sportWindow || sportWindow.hours.closed) return { ok: false as const, message: "This sport is not available on the selected date." };
+
+  return { ok: true as const, sport, duration, allowedDuration, sportWindow };
 }

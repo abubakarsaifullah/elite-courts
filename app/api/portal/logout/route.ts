@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName } from "@/lib/portalAuth";
+import { cookies } from "next/headers";
+import { clearActiveSession, getSessionCookieName } from "@/lib/portalAuth";
 
 export const runtime = "nodejs";
 
 export async function POST() {
+  const cookieStore = await cookies();
+  clearActiveSession(cookieStore.get(getSessionCookieName())?.value);
+
   const response = NextResponse.json({ ok: true });
   response.cookies.set({
     name: getSessionCookieName(),

@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getBookingDurationById } from "@/data/bookingDurations";
-import { getBookingSportById } from "@/data/sports";
 import {
   generateAvailableSlots,
   generateBookingId,
-  getBusinessWindowForDate,
-  isDateInBookingWindow,
+  getSportBusinessWindowForDate,
   sanitizeText,
+  validateBookingConfigSelection,
   validateName,
   validatePakistaniMobile,
 } from "@/lib/bookingUtils";
@@ -27,9 +25,9 @@ const schema = z.object({
   status: z.enum(["pending", "confirmed"]).default("confirmed"),
 });
 
-async function generateUniqueBookingId(sportId: string) {
+async function generateUniqueBookingId(sportId: string, date = new Date()) {
   for (let attempt = 0; attempt < 6; attempt += 1) {
-    const bookingId = generateBookingId(sportId);
+    const bookingId = generateBookingId(sportId, date);
     const existing = await findBookingById(bookingId);
     if (!existing) return bookingId;
   }
@@ -40,36 +38,33 @@ export async function POST(request: Request) {
   try {
     await requireAdminSession();
     const payload = schema.parse(await request.json());
-    const sport = getBookingSportById(payload.sportId);
-    const duration = getBookingDurationById(payload.durationId);
+    const selection = validateBookingConfigSelection(payload);
     const clientName = validateName(payload.clientName);
     const phone = validatePakistaniMobile(payload.phone);
 
-    if (!sport || !duration || !clientName || !phone) {
-      return NextResponse.json({ ok: false, message: "Please check the booking details." }, { status: 400 });
+    if (!selection.ok || !clientName || !phone) {
+      return NextResponse.json({ ok: false, message: selection.ok ? "Please check the booking details." : selection.message }, { status: 400 });
     }
 
-    if (!isDateInBookingWindow(payload.date)) {
-      return NextResponse.json({ ok: false, message: "Selected date is outside the allowed booking window." }, { status: 400 });
-    }
+    const businessWindow = getSportBusinessWindowForDate(selection.sport.id, payload.date);
+    if (!businessWindow) return NextResponse.json({ ok: false, message: "This sport is not available on the selected date." }, { status: 400 });
 
-    const businessWindow = getBusinessWindowForDate(payload.date);
     const existingBookings = await listBookingsForAvailability({
       timeMin: businessWindow.start.toISOString(),
       timeMax: businessWindow.end.toISOString(),
-      sportId: sport.id,
+      sportId: selection.sport.id,
     });
-    const availableSlots = generateAvailableSlots({ date: payload.date, durationMinutes: duration.minutes, sportId: sport.id, existingBookings });
+    const availableSlots = generateAvailableSlots({ date: payload.date, durationMinutes: selection.duration.minutes, sportId: selection.sport.id, existingBookings });
     const requestedSlot = availableSlots.find((slot) => slot.startIso === payload.startIso && slot.endIso === payload.endIso);
     if (!requestedSlot) return NextResponse.json({ ok: false, code: "SLOT_TAKEN", message: "This slot is no longer available." }, { status: 409 });
 
     const booking = await createCalendarBooking({
-      bookingId: await generateUniqueBookingId(sport.id),
+      bookingId: await generateUniqueBookingId(selection.sport.id, new Date(requestedSlot.startIso)),
       clientName: sanitizeText(clientName, 50),
       phone,
-      sportId: sport.id,
-      sportName: sport.name,
-      durationMinutes: duration.minutes,
+      sportId: selection.sport.id,
+      sportName: selection.sport.name,
+      durationMinutes: selection.duration.minutes,
       status: payload.status,
       channel: "Admin Portal",
       startIso: requestedSlot.startIso,

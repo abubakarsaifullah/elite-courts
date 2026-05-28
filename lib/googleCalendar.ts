@@ -134,7 +134,7 @@ function getEventDateTime(value: GoogleCalendarDateTime | undefined) {
 }
 
 function getManualSport(summary: string | undefined, description: string | undefined, sportId?: string, sportName?: string) {
-  if (sportId) return getBookingSportById(sportId);
+  if (sportId) return getBookingSportById(sportId, { includeInactive: true });
   const descriptionSport = sportName?.toLowerCase();
   return bookingSports.find((sport) => {
     const name = sport.name.toLowerCase();
@@ -218,7 +218,7 @@ export async function listBookingsForAvailability(params: { timeMin: string; tim
 }
 
 function buildEventBody(input: BookingInput) {
-  const sport = getBookingSportById(input.sportId);
+  const sport = getBookingSportById(input.sportId, { includeInactive: true });
   const record: BookingRecord = {
     eventId: "",
     bookingId: input.bookingId,
@@ -378,7 +378,7 @@ export async function updateCalendarBooking(params: {
   if (!isActiveBooking(existing)) throw new Error("PAST_BOOKING");
   if (existing.status === "cancelled") throw new Error("CANCELLED_BOOKING");
 
-  const sport = getBookingSportById(params.sportId);
+  const sport = getBookingSportById(params.sportId, { includeInactive: true });
   const updatedRecord: BookingRecord = {
     ...existing,
     clientName: params.clientName,
