@@ -292,3 +292,46 @@ Then verify:
 - Verify the Resend sender domain before using a custom sender email.
 - Add Google Places API credentials only on the server if live reviews are desired.
 - Replace or refresh media with optimized real facility photos and videos before final public launch.
+
+## Booking chatbot and admin portal
+
+The website includes a rule-based booking chatbot and an admin portal at:
+
+```txt
+/portal
+```
+
+The chatbot creates pending booking requests in Google Calendar. The admin portal lets the owner view requests and update booking status.
+
+Setup instructions are documented in:
+
+```txt
+BOOKING_SETUP.md
+```
+
+Important booking files:
+
+```txt
+data/chatbotMessages.ts
+data/sports.ts
+data/bookingDurations.ts
+data/bookingStatuses.ts
+data/businessHours.ts
+lib/regex.ts
+lib/googleCalendar.ts
+lib/portalAuth.ts
+```
+
+Required environment variables are listed in `.env.example`.
+
+## Booking chatbot and admin portal
+
+The project includes a rule-based booking chatbot and `/portal` admin area backed by Google Calendar API. See `BOOKING_SETUP.md` for complete setup, environment variables, admin password hash generation, Google Calendar sharing, business hours, cookies, and production testing notes.
+
+## Booking system documents
+
+For booking and admin portal behavior, see:
+
+- `BOOKING_SETUP.md` — Google Calendar, environment variables, and setup.
+- `BOOKING_LOGIC.md` — slot generation, prices, sports, timings, and WhatsApp notification template.
+- `ADMIN_PORTAL.md` — admin login/session limits, refresh behavior, and create/edit/delete rules.

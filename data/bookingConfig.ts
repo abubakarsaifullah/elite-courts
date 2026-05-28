@@ -10,3 +10,8 @@ export const bookingSyncConfig = {
   adminPortalRefreshSeconds: Number(process.env.NEXT_PUBLIC_ADMIN_PORTAL_REFRESH_SECONDS ?? 30),
   enableManualRefresh: true,
 };
+
+export const bookingWindowConfig = {
+  // Current business week plus the next week until Sunday.
+  includeCurrentWeekAndNextWeekUntilSunday: true,
+};

@@ -33,10 +33,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, message: "Invalid login details." }, { status: 401 });
     }
 
+    let sessionToken: string;
+    try {
+      sessionToken = createSessionToken(payload.username);
+    } catch (error) {
+      if (error instanceof Error && error.message === "MAX_ACTIVE_SESSIONS") {
+        return NextResponse.json({ ok: false, message: "Maximum active admin sessions reached. Please log out from another device first." }, { status: 409 });
+      }
+      throw error;
+    }
+
     const response = NextResponse.json({ ok: true });
     response.cookies.set({
       name: getSessionCookieName(),
-      value: createSessionToken(payload.username),
+      value: sessionToken,
       httpOnly: true,
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
