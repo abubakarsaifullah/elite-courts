@@ -91,6 +91,24 @@ interface BookingFormState {
   endIso: string;
 }
 
+
+async function readApiJson<T>(response: Response, fallbackMessage: string): Promise<T> {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    return (await response.json()) as T;
+  }
+
+  const text = await response.text().catch(() => "");
+  const isHtml = text.trimStart().startsWith("<!DOCTYPE") || text.trimStart().startsWith("<html");
+
+  if (response.status === 404 || isHtml) {
+    throw new Error("The server returned a page instead of JSON. Please make sure the required API route exists and restart the development server.");
+  }
+
+  throw new Error(fallbackMessage);
+}
+
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-PK", {
     timeZone: businessHours.timezone,
@@ -259,7 +277,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
     setBookingsError("");
     try {
       const response = await fetch("/api/portal/bookings", { cache: "no-store" });
-      const data = (await response.json()) as { ok: boolean; bookings?: BookingRecord[]; stats?: BookingStats; lastUpdated?: string; message?: string };
+      const data = await readApiJson<{ ok: boolean; bookings?: BookingRecord[]; stats?: BookingStats; lastUpdated?: string; message?: string }>(response, "Unable to load bookings.");
       if (response.status === 401) {
         setIsAuthenticated(false);
         return;
@@ -308,7 +326,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = (await response.json()) as { ok: boolean; message?: string };
+      const data = await readApiJson<{ ok: boolean; message?: string }>(response, "Invalid login details.");
       if (!response.ok || !data.ok) throw new Error(data.message || "Invalid login details.");
       setIsAuthenticated(true);
       setPassword("");
@@ -346,7 +364,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventId, status, reason }),
       });
-      const data = (await response.json()) as { ok: boolean; booking?: BookingRecord; code?: string; message?: string };
+      const data = await readApiJson<{ ok: boolean; booking?: BookingRecord; code?: string; message?: string }>(response, "Unable to update booking.");
       if (data.code === "PAST_BOOKING") {
         await loadBookings(true);
         setModal({ type: "none" });
@@ -374,7 +392,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventId }),
       });
-      const data = (await response.json()) as { ok: boolean; message?: string };
+      const data = await readApiJson<{ ok: boolean; message?: string }>(response, "Unable to delete booking.");
       if (!response.ok || !data.ok) throw new Error(data.message || "Unable to delete booking.");
       setBookings((current) => current.filter((booking) => booking.eventId !== eventId));
       setToast("Cancelled booking deleted from Google Calendar.");
@@ -403,7 +421,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sportId: form.sportId, durationId: form.durationId, date: form.date, excludeEventId }),
       });
-      const data = (await response.json()) as { ok: boolean; slots?: Slot[]; price?: PriceEstimate; message?: string };
+      const data = await readApiJson<{ ok: boolean; slots?: Slot[]; price?: PriceEstimate; message?: string }>(response, "Unable to load slots.");
       if (!response.ok || !data.ok) throw new Error(data.message || "Unable to load slots.");
       setSlots(data.slots ?? []);
       setSlotPrice(data.price ?? getBookingPriceEstimate({ sportId: form.sportId, durationId: form.durationId, date: form.date }));
@@ -456,7 +474,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, eventId: modal.type === "edit" ? modal.booking.eventId : undefined }),
       });
-      const data = (await response.json()) as { ok: boolean; booking?: BookingRecord; message?: string; code?: string };
+      const data = await readApiJson<{ ok: boolean; booking?: BookingRecord; message?: string; code?: string }>(response, "Unable to save booking.");
       if (!response.ok || !data.ok || !data.booking) throw new Error(data.message || "Unable to save booking.");
       setToast(modal.type === "edit" ? "Booking updated in Google Calendar." : "Booking created in Google Calendar.");
       setModal({ type: "none" });
@@ -607,9 +625,9 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
           <StatCard label="Upcoming Confirmed" value={stats?.upcomingConfirmed ?? 0} icon={CalendarDays} hint="After today" />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-          <section className="flex h-[min(48rem,calc(100dvh-8rem))] min-h-[28rem] min-w-0 flex-col overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur-xl">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <section className="flex h-[min(42rem,calc(100dvh-6rem))] min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-[var(--shadow)] backdrop-blur-xl sm:min-h-[30rem] sm:p-5 xl:h-[min(44rem,calc(100dvh-8rem))] xl:min-h-[38rem]">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <h2 className="text-xl font-black text-[color:var(--text)]">Booking Requests</h2>
                 <p className="text-sm font-medium text-[color:var(--muted)]">Only current and future bookings are shown for active management.</p>
@@ -638,8 +656,8 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
             {toast && <p className="mt-4 rounded-2xl bg-[color:var(--accent-soft)] px-4 py-3 text-sm font-bold text-[color:var(--accent-strong)]">{toast}</p>}
             {bookingsError && <p className="mt-4 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm font-bold text-rose-600 dark:text-rose-200">{bookingsError}</p>}
 
-            <div className="mt-5 min-h-0 flex-1 overflow-y-auto rounded-[1.4rem] border border-[color:var(--border)] overscroll-contain">
-              <div className="sticky top-0 z-10 hidden border-b border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-[color:var(--muted)] lg:grid lg:grid-cols-[1.15fr_1fr_1fr_1fr_0.8fr_13rem]">
+            <div className="mt-5 min-h-0 flex-1 overflow-y-auto rounded-[1.4rem] border border-[color:var(--border)] overscroll-y-auto bg-[color:var(--surface-strong)] [scrollbar-gutter:stable]">
+              <div className="sticky top-0 z-10 hidden border-b border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-[color:var(--muted)] xl:grid xl:grid-cols-[1.15fr_1fr_1fr_1fr_0.8fr_13rem]">
                 {bookingTableColumns.map((column) => (
                   <button key={column.key} type="button" disabled={!column.sortable} onClick={() => toggleSort(column.key)} className={cn("text-left uppercase tracking-[0.14em]", column.sortable && "transition hover:text-[color:var(--accent-strong)]")}> 
                     {column.label}{sortKey === column.key && column.sortable ? (sortDirection === "asc" ? " ↑" : " ↓") : ""}
@@ -652,32 +670,44 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
               ) : filteredBookings.length === 0 ? (
                 <div className="px-4 py-12 text-center text-sm font-bold text-[color:var(--muted)]">No active booking requests found.</div>
               ) : (
-                <div className="divide-y divide-[color:var(--border)]">
+                <div className="space-y-3 p-3 xl:space-y-0 xl:p-0 xl:divide-y xl:divide-[color:var(--border)]">
                   {filteredBookings.map((booking) => (
-                    <div key={booking.eventId} className={cn("grid gap-3 bg-[color:var(--surface)] px-4 py-4 text-sm lg:grid-cols-[1.15fr_1fr_1fr_1fr_0.8fr_13rem] lg:items-center", booking.status === "pending" && "bg-amber-400/[0.06]")}> 
+                    <div key={booking.eventId} className={cn("grid gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4 text-sm shadow-sm sm:grid-cols-2 xl:rounded-none xl:border-0 xl:shadow-none xl:grid-cols-[1.15fr_1fr_1fr_1fr_0.8fr_13rem] xl:items-center", booking.status === "pending" && "bg-amber-400/[0.06]")}> 
                       <div>
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--muted)] xl:hidden">Customer</p>
                         <p className="font-black text-[color:var(--text)]">{booking.clientName}</p>
                         <p className="text-xs font-semibold text-[color:var(--muted)]">{booking.phone}</p>
                       </div>
-                      <div className="font-bold text-[color:var(--text)]">{booking.sportName}</div>
+                      <div className="font-bold text-[color:var(--text)]">
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--muted)] xl:hidden">Sport</p>
+                        {booking.sportName}
+                      </div>
                       <div>
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--muted)] xl:hidden">Date & Time</p>
                         <p className="font-bold text-[color:var(--text)]">{formatDate(booking.startIso)}</p>
                         <p className="text-xs font-semibold text-[color:var(--muted)]">{formatTime(booking.startIso)} - {formatTime(booking.endIso)} · {booking.durationMinutes} min</p>
                       </div>
-                      <div><BookingStatusBadge status={booking.status} /></div>
-                      <div className="text-xs font-black text-[color:var(--muted-strong)]">{booking.bookingId}</div>
-                      <div className="flex flex-wrap gap-2">
+                      <div>
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--muted)] xl:hidden">Status</p>
+                        <BookingStatusBadge status={booking.status} />
+                      </div>
+                      <div className="text-xs font-black text-[color:var(--muted-strong)]">
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--muted)] xl:hidden">Booking ID</p>
+                        {booking.bookingId}
+                      </div>
+                      <div className="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-1 xl:justify-start">
+                        <p className="basis-full text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--muted)] xl:hidden">Actions</p>
                         {booking.status !== "cancelled" && (
-                          <button type="button" onClick={() => openEditModal(booking)} className="rounded-full border border-[color:var(--border)] px-3 py-2 text-xs font-black text-[color:var(--text)] transition hover:border-cyan-300/45 hover:bg-[color:var(--surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35"><Edit3 className="mr-1 inline h-3.5 w-3.5" />Edit</button>
+                          <button type="button" onClick={() => openEditModal(booking)} className="min-w-[5.5rem] flex-1 rounded-full border border-[color:var(--border)] px-3 py-2 text-center text-xs font-black text-[color:var(--text)] transition hover:border-cyan-300/45 hover:bg-[color:var(--surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/35 sm:flex-none"><Edit3 className="mr-1 inline h-3.5 w-3.5" />Edit</button>
                         )}
                         {booking.status !== "confirmed" && booking.status !== "cancelled" && (
-                          <button type="button" disabled={updatingEventId === booking.eventId} onClick={() => updateStatus(booking.eventId, "confirmed")} className="rounded-full bg-emerald-500 px-3 py-2 text-xs font-black text-slate-950 transition hover:-translate-y-0.5 disabled:opacity-50">Confirm</button>
+                          <button type="button" disabled={updatingEventId === booking.eventId} onClick={() => updateStatus(booking.eventId, "confirmed")} className="min-w-[5.5rem] flex-1 rounded-full bg-emerald-500 px-3 py-2 text-xs font-black text-slate-950 transition hover:-translate-y-0.5 disabled:opacity-50 sm:flex-none">Confirm</button>
                         )}
                         {booking.status !== "cancelled" && (
-                          <button type="button" onClick={() => setModal({ type: "cancel", booking })} className="rounded-full bg-rose-500/12 px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-500/18 dark:text-rose-200">Cancel</button>
+                          <button type="button" onClick={() => setModal({ type: "cancel", booking })} className="min-w-[5.5rem] flex-1 rounded-full bg-rose-500/12 px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-500/18 dark:text-rose-200 sm:flex-none">Cancel</button>
                         )}
                         {booking.status === "cancelled" && (
-                          <button type="button" onClick={() => setModal({ type: "delete", booking })} className="rounded-full bg-rose-600 px-3 py-2 text-xs font-black text-white transition hover:-translate-y-0.5"><Trash2 className="mr-1 inline h-3.5 w-3.5" />Delete</button>
+                          <button type="button" onClick={() => setModal({ type: "delete", booking })} className="min-w-[5.5rem] flex-1 rounded-full bg-rose-600 px-3 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 sm:flex-none"><Trash2 className="mr-1 inline h-3.5 w-3.5" />Delete</button>
                         )}
                       </div>
                     </div>
@@ -687,7 +717,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
             </div>
           </section>
 
-          <aside className="space-y-4">
+          <aside className="space-y-4 xl:flex xl:h-[min(44rem,calc(100dvh-8rem))] xl:min-h-[38rem] xl:flex-col">
             <div className="rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur-xl">
               <h2 className="text-lg font-black text-[color:var(--text)]">Confirmed by Sport</h2>
               <div className="mt-4 space-y-3">
@@ -699,7 +729,7 @@ export function AdminPortal({ initialAuthenticated }: AdminPortalProps) {
                 ))}
               </div>
             </div>
-            <div className="rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur-xl">
+            <div className="rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur-xl xl:flex-1">
               <h2 className="text-lg font-black text-[color:var(--text)]">Workflow</h2>
               <ol className="mt-4 space-y-3 text-sm font-medium text-[color:var(--muted)]">
                 <li>1. Customer or admin creates a request.</li>

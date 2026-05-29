@@ -38,7 +38,9 @@ export const sportBookingSettings = {
   // Slots start at clean 30-minute boundaries: xx:00 and xx:30.
   // The system rounds the current time up to the next boundary before offering slots.
   slotStartIntervalMinutes: 30,
-  // Weekend pricing is configurable here. Change this if your weekend pricing uses different days.
+  // Weekend pricing is configurable here.
+  // Every day listed below uses weekendPriceKey. Every day not listed uses weekdayPriceKey.
+  // Example: for Friday/Saturday weekends, change this to ["friday", "saturday"].
   weekendDays: ["saturday", "sunday"] as Weekday[],
 };
 

@@ -1,26 +1,28 @@
 // All customer-facing chatbot wording is managed here.
 // Update these messages when you want to change the booking assistant tone.
+// Keep each step as one complete message where possible so the chat does not
+// show unnecessary back-to-back bot bubbles.
 
 export const chatbotMessages = {
-  greeting: "👋 Welcome to Elite Courts! How can I help you today?",
-  mainMenu: "Please choose an option below.",
-  createBooking: "Great! Let’s create your booking request.",
-  viewBooking: "Sure — enter your mobile number and I’ll show your active bookings.",
+  greeting: "👋 Welcome to Elite Courts! Choose an option below and I’ll guide you step by step.",
+  mainMenu: "Choose an option below and I’ll help you with the next step.",
+  createBooking: "Great, let’s create your booking request. Which sport would you like to book?",
+  viewBooking: "Sure — enter your mobile number and I’ll show your active pending or confirmed bookings.",
   editBooking:
-    "To edit your booking, please contact our team. We’ll help you update your booking details.",
+    "To edit your booking, please contact our team. We’ll help you update your booking details. What would you like to do next?",
   cancelBooking:
-    "To cancel your booking, please contact our team. We’ll help you with the cancellation.",
+    "To cancel your booking, please contact our team. We’ll help you with the cancellation. What would you like to do next?",
   chooseSport: "Which sport would you like to book?",
-  chooseDuration: "How long would you like to play?",
-  namePrompt: "Please enter your full name.",
+  chooseDuration: "Nice choice. How long would you like to play?",
+  namePrompt: "Please enter your full name so we can attach it to your booking request.",
   invalidName: "Please enter a valid name using letters, spaces, apostrophes, hyphens, or dots. Example: Ali Khan.",
   phonePrompt: "Please enter your Pakistani mobile number, for example: 03001234567.",
   invalidPhone: "Please enter a valid Pakistani mobile number, for example: 03001234567.",
-  datePrompt: "Please choose your booking date.",
+  datePrompt: "Now choose your booking date from the calendar below.",
   pastDateError: "Please choose today or a future date.",
   bookingWindowError: "We can only accept bookings for the current week and next week. Please choose an earlier date.",
   loadingSlots: "Checking available slots for your selected date...",
-  slotsPrompt: "Please choose one of the available slots below. You can scroll the list if more times are visible.",
+  slotsPrompt: "Please choose one of the available slots below. The list scrolls if more times are available.",
   noSlots: "Sorry, no available slots were found for that date and duration. Please choose another date or contact our team.",
   showMore: "Show More",
   confirmBookingPrompt: "Please review your booking summary before we create the request.",
@@ -42,7 +44,7 @@ export const chatbotMessages = {
   mainMenuButton: "Main Menu",
   createAnotherBooking: "Create Another Booking",
   viewAnotherBooking: "View Another Booking",
-  nextActionPrompt: "Would you like to do anything else?",
-  timeoutReset: "Your chat was reset because it was inactive. Let’s start again.",
+  nextActionPrompt: "What would you like to do next?",
+  timeoutReset: "Your chat was reset because it was inactive. Choose an option below to start again.",
   genericError: "Something went wrong. Please try again or contact our team.",
 };
